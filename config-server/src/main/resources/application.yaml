@@ -9,7 +9,7 @@ spring:
         encrypt:
           enabled: false
         git:
-          uri: https://github.com/vanja-djenadija/config-repo.git
+          uri: https://github.com/DanielMajstorovic/config-repo.git
           searchPaths:
             - incident-service
             - moderation-service
