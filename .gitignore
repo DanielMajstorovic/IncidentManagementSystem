@@ -1,0 +1,30 @@
+# Ignore Maven wrapper files in all directories
+**/mvnw
+**/mvnw.cmd
+
+# Ignore HELP.md files in all directories
+**/HELP.md
+
+# Ignore target directories in all subfolders (for compiled files)
+**/target/
+
+# Ignore IDE files
+**/.idea/
+**/.vscode/
+
+# Ignore log files
+**/*.log
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore Java class files
+**/*.class
+
+# Ignore Spring Boot specific files
+**/application.properties
+**/application.yml
+
+# Ignore .env files (if present)
+**/.env

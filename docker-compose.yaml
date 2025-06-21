@@ -1,0 +1,108 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - ims-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"     # RabbitMQ main port
+      - "15672:15672"   # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - ims-network
+
+  config-server:
+    build: ./config-server
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    networks:
+      - ims-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
+      interval: 10s
+      retries: 10
+      start_period: 15s
+      timeout: 5s
+
+  discovery-server:
+    build: ./discovery-server
+    container_name: discovery-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - ims-network
+    depends_on:
+      - config-server
+
+  incident-service:
+    build: ./incident-service
+    container_name: incident-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${INCIDENT_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${INCIDENT_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${INCIDENT_DB_PASSWORD}
+      RABBITMQ_HOST: rabbitmq
+    networks:
+      - ims-network
+
+    depends_on:
+      config-server:
+        condition: service_healthy
+      mysql:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      discovery-server:
+        condition: service_started
+    restart: on-failure
+
+
+  moderation-service:
+    build: ./moderation-service
+    container_name: moderation-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MODERATION_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${MODERATION_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MODERATION_DB_PASSWORD}
+      RABBITMQ_HOST: rabbitmq
+    networks:
+      - ims-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      mysql:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      discovery-server:
+        condition: service_started
+    restart: on-failure
+
+networks:
+  ims-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  rabbitmq_data:

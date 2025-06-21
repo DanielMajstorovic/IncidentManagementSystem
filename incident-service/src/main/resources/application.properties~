@@ -1,0 +1,33 @@
+server.port=8081
+spring.application.name=incident-service
+# Database
+spring.datasource.url=jdbc:mysql://localhost:3306/incident_db
+spring.datasource.username=root
+spring.datasource.password=root
+spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.hibernate.ddl-auto=update
+# Amazon Web Services
+spring.config.import=optional:aws-secretsmanager:prod/incident-service-s3
+aws.region=eu-north-1
+aws.bucketName=incident-service-images
+# Properties for images sent to S3
+spring.servlet.multipart.enabled=true
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB
+# RabbitMQ configuration
+rabbitmq.host=localhost
+rabbitmq.port=5672
+rabbitmq.username=guest
+rabbitmq.password=guest
+# Exchange and queue definition
+rabbitmq.exchange=incident-exchange
+rabbitmq.queue-incident-created=incident-created-queue
+rabbitmq.queue-status-updated=status-updated-queue
+rabbitmq.routing-key-incident-created=incident.created
+rabbitmq.routing-key-status-updated=incident.status.updated
+
+
+
+
+
+

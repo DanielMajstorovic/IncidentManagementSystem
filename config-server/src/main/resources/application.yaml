@@ -1,0 +1,23 @@
+server:
+  port: 8888
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        encrypt:
+          enabled: false
+        git:
+          uri: https://github.com/vanja-djenadija/config-repo.git
+          searchPaths:
+            - incident-service
+            - moderation-service
+            - auth-service
+            - user-service
+            - analytics-service
+            - alert-service
+            - nlp-service
+            - gateway-service
+          username: ${GIT_USERNAME}
+          password: ${GIT_PASSWORD}
