@@ -5,10 +5,17 @@ import eu.reportincident.incident_service.service.S3Service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Service
@@ -16,6 +23,12 @@ public class S3ServiceImpl implements S3Service {
 
     @Value("${aws.bucketName}")
     private String bucketName;
+
+    @Value("${aws.presignedDuration}")
+    private int expireSeconds;
+
+    @Value("${aws.region}")
+    private Region region;
 
     private final S3Client s3Client;
 
@@ -42,4 +55,28 @@ public class S3ServiceImpl implements S3Service {
 
         return fileUploadResponse;
     }
+
+
+
+    public String generatePresignedUrl(String objectKey) {
+        S3Presigner presigner = S3Presigner.builder()
+                .region(region)
+                .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
+                .build();
+
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(objectKey)
+                .build();
+
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofSeconds(expireSeconds))
+                .getObjectRequest(getObjectRequest)
+                .build();
+
+        PresignedGetObjectRequest presignedRequest = presigner.presignGetObject(presignRequest);
+
+        return presignedRequest.url().toString();
+    }
+
 }

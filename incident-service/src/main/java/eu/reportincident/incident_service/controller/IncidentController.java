@@ -82,6 +82,12 @@ public class IncidentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(fileUrls);
     }
 
+    @GetMapping("/image-url/{filename}")
+    public ResponseEntity<String> getPresignedImageUrl(@PathVariable String filename) {
+        String url = s3Service.generatePresignedUrl(filename);
+        return ResponseEntity.ok(url);
+    }
+
 
     @PostMapping("/filter")
     public Page<Incident> findByFilter(Pageable page, @RequestBody @Valid FilterRequest filterRequest) {

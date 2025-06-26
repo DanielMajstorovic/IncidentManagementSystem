@@ -1,0 +1,119 @@
+<div class="page-container">
+  
+  <!-- FILTER SIDEBAR (Nema izmena) -->
+  <div class="filter-panel">
+    <div class="filter-header">
+      <h4><i class="bi bi-filter"></i> Filters</h4>
+      <button class="btn btn-sm btn-outline-secondary" (click)="resetFilters()">Reset</button>
+    </div>
+    <form [formGroup]="filterForm" class="filter-form">
+      <div class="mb-3">
+        <label for="location" class="form-label">Location Search</label>
+        <input type="text" id="location" class="form-control" formControlName="location" placeholder="e.g., Banja Luka">
+      </div>
+      <div class="mb-3">
+        <label for="type" class="form-label">Incident Type</label>
+        <select id="type" class="form-select" formControlName="incidentType" (change)="onTypeChange()">
+          <option value="">All Types</option>
+          <option *ngFor="let type of incidentTypes" [value]="type">{{ type | titlecase | replace: '_':' ' }}</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="subtype" class="form-label">Incident Subtype</label>
+        <select id="subtype" class="form-select" formControlName="incidentSubtype" [disabled]="!filterForm.get('incidentType')?.value">
+          <option value="">All Subtypes</option>
+          <option *ngFor="let subtype of currentSubtypes" [value]="subtype">{{ subtype | titlecase | replace: '_':' ' }}</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Time Range</label>
+        <div class="btn-group w-100" role="group">
+          <input type="radio" class="btn-check" formControlName="timeRange" id="timeAll" value="" autocomplete="off" checked>
+          <label class="btn btn-outline-primary" for="timeAll">All</label>
+          <input *ngFor="let range of timeRanges" type="radio" class="btn-check" formControlName="timeRange" [id]="'time' + range.value" [value]="range.value" autocomplete="off">
+          <label *ngFor="let range of timeRanges" class="btn btn-outline-primary" [for]="'time' + range.value">{{ range.label }}</label>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- MAP CONTAINER (Nema izmena) -->
+  <div class="map-container">
+    <div class="map-frame"
+         leaflet
+         [leafletOptions]="mapOptions"
+         [leafletLayers]="incidentLayers"
+         (leafletMapReady)="onMapReady($event)">
+    </div>
+    <div class="map-legend">
+      <h6>Legend</h6>
+      <div *ngFor="let item of legendData" class="legend-item">
+        <img [src]="'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-' + item.color + '.png'" class="legend-icon" [alt]="item.type">
+        <span>{{ item.type | titlecase }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOOTSTRAP MODAL (Ažuriran sa logikom za učitavanje) -->
+<div class="modal fade" id="incidentDetailModal" tabindex="-1" aria-labelledby="incidentDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" *ngIf="selectedIncident">
+      <div class="modal-header">
+        <h5 class="modal-title" id="incidentDetailModalLabel">
+          <i class="bi bi-info-circle-fill me-2"></i>
+          Incident Details: {{ selectedIncident.type | titlecase | replace: '_':' ' }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6><i class="bi bi-camera-fill"></i> Attached Photos</h6>
+            <!-- Kontejner za učitavanje -->
+            <div *ngIf="isModalLoading" class="modal-loader">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2 text-muted">Loading images...</p>
+            </div>
+            <!-- Kontejner za sadržaj (karusel ili poruka) -->
+            <div *ngIf="!isModalLoading">
+              <div *ngIf="presignedImageUrls.length > 0; else noPhotos">
+                <div id="photoCarousel" class="carousel slide" data-bs-ride="carousel">
+                  <div class="carousel-inner rounded">
+                    <div class="carousel-item" *ngFor="let url of presignedImageUrls; let isFirst = first" [class.active]="isFirst">
+                      <img [src]="url" class="d-block w-100" alt="Incident Photo">
+                    </div>
+                  </div>
+                  <button class="carousel-control-prev" type="button" data-bs-target="#photoCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Previous</span></button>
+                  <button class="carousel-control-next" type="button" data-bs-target="#photoCarousel" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Next</span></button>
+                </div>
+              </div>
+              <ng-template #noPhotos>
+                <div class="text-center text-muted p-4 border rounded bg-light">
+                  <i class="bi bi-image-alt fs-3"></i>
+                  <p class="mb-0">No photos were attached.</p>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <!-- Informacije ostaju iste -->
+            <h6><i class="bi bi-card-text"></i> Information</h6>
+            <ul class="list-group">
+              <li class="list-group-item d-flex justify-content-between align-items-center">Subtype: <span class="badge bg-secondary rounded-pill">{{ selectedIncident.subtype | titlecase | replace: '_':' ' }}</span></li>
+              <li class="list-group-item"><strong>Description:</strong><p class="mb-0 mt-1">{{ selectedIncident.description }}</p></li>
+              <li class="list-group-item"><strong>Location:</strong><p class="mb-0 mt-1 fst-italic">{{ selectedIncident.location.latitude }}, {{ selectedIncident.location.longitude }}</p></li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">Reported On: <span>{{ selectedIncident.creationDate | date:'medium' }}</span></li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">Status: <span class="badge bg-success rounded-pill">{{ selectedIncident.status }}</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

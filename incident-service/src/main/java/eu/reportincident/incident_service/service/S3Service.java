@@ -7,5 +7,6 @@ import java.io.IOException;
 
 public interface S3Service {
     FileUploadResponse uploadFile(MultipartFile file) throws IOException;
+    String generatePresignedUrl(String filename);
 }
 
