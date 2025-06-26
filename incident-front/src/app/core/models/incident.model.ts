@@ -40,7 +40,7 @@ export interface Incident {
   description: string;
   images: IncidentImage[];
   status: string;
-  creationDate: string;
+  reportedAt: string;
 }
 
 // Interfejs za KREIRANJE incidenta, tačno po vašem IncidentRequest.java
