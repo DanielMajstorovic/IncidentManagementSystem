@@ -1,4 +1,4 @@
-package eu.reportincident.auth_service;
+package eu.reportincident.authservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

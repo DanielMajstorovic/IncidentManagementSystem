@@ -1,4 +1,4 @@
-package eu.reportincident.gateway_service;
+package eu.reportincident.gatewayservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

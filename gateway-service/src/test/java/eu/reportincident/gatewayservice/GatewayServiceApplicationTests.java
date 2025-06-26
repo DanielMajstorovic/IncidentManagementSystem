@@ -1,4 +1,4 @@
-package eu.reportincident.gateway_service;
+package eu.reportincident.gatewayservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

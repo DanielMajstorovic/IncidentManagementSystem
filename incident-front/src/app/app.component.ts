@@ -32,7 +32,7 @@ export class AppComponent {
   }
 
   loginWithGoogle() {
-    window.location.href = "/api/auth/login" // ili gateway ruta
+    window.location.href = "http://localhost:8080/auth-service/oauth2/authorization/google" // ili gateway ruta
   }
 
   logout() {
