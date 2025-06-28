@@ -20,7 +20,7 @@
   transition: all 0.3s ease;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -80,23 +80,12 @@
       line-height: 1.2;
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
-
-    .brand-subtitle {
-      font-size: 0.75rem;
-      opacity: 0.8;
-      font-weight: 400;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
   }
 
   @media (max-width: 768px) {
     .brand-text {
       .brand-title {
         font-size: 1.1rem;
-      }
-      .brand-subtitle {
-        display: none;
       }
     }
   }
@@ -118,6 +107,7 @@
     transition: all 0.3s ease;
     font-weight: 500;
     font-size: 0.9rem;
+    cursor: pointer;
 
     &:hover {
       color: white;
@@ -227,12 +217,12 @@
   height: 12px;
   border-radius: 50%;
   border: 2px solid white;
-  
+
   &.online {
     background: #2ecc71;
     box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.3);
   }
-  
+
   &.offline {
     background: #95a5a6;
   }
@@ -272,7 +262,7 @@
   }
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: -8px;
     right: 20px;
@@ -301,6 +291,19 @@
     .dropdown-email {
       font-size: 0.85rem;
       opacity: 0.9;
+      margin-bottom: 0.5rem;
+    }
+
+    .dropdown-role {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      opacity: 0.9;
+
+      i {
+        font-size: 0.9rem;
+      }
     }
   }
 }
@@ -349,6 +352,20 @@
       background: rgba(220, 53, 69, 0.1);
       color: #dc3545;
     }
+  }
+
+  &.nav-item {
+    &.active {
+      background: rgba(102, 103, 234, 0.1);
+      color: #667eea;
+    }
+  }
+}
+
+// MOBILE NAVIGATION
+.mobile-nav {
+  .mobile-nav-items {
+    padding: 0.5rem;
   }
 }
 
@@ -409,7 +426,7 @@
 .main-content {
   margin-top: 70px; // Height of fixed header
   height: calc(100vh - 70px);
-  overflow: hidden;
+  overflow: auto;
 }
 
 // DROPDOWN OVERLAY

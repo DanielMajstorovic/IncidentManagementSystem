@@ -1,47 +1,115 @@
 import { CommonModule } from "@angular/common"
-import { Component } from "@angular/core"
-import { RouterOutlet } from "@angular/router"
-import { Observable } from "rxjs"
+import { Component, OnInit, OnDestroy } from "@angular/core"
+import { RouterOutlet, Router, RouterModule } from "@angular/router"
+import { Observable, Subject } from "rxjs"
+import { takeUntil } from "rxjs/operators"
+import { User } from "./core/models/user.model"
+import { AuthService } from "./core/services/auth.service"
+
+interface NavigationItem {
+  label: string
+  route: string
+  icon: string
+  roles: string[]
+}
 
 @Component({
   selector: "app-root",
   standalone: true,
-  imports: [RouterOutlet, CommonModule],
+  imports: [RouterOutlet, CommonModule, RouterModule],
   templateUrl: "./app.component.html",
   styleUrl: "./app.component.scss",
 })
-export class AppComponent {
-  user$: Observable<any>
+export class AppComponent implements OnInit, OnDestroy {
+  user$: Observable<User | null>
+  currentUser: User | null = null
   isMenuOpen = false
 
-  constructor() {
-    this.user$ = new Observable((observer) => {
-      // Simulacija korisničkih podataka, zameni sa stvarnim servisom
-      // const user = {
-      //   name: "John Doe",
-      //   email: "john.doe@example.com",
-      //   role: "Manager",
-      //   avatar: null, // URL slike ili null za inicijale
-      // }
+  private destroy$ = new Subject<void>()
 
-      const user = null; // Uncomment za testiranje login state-a
+  // Navigacioni elementi za različite role
+  navigationItems: NavigationItem[] = [
+    {
+      label: "Incidents",
+      route: "/moderator/incidents",
+      icon: "list-ul",
+      roles: ["MODERATOR"],
+    },
+    {
+      label: "Analytics",
+      route: "/moderator/analytics",
+      icon: "bar-chart",
+      roles: ["MODERATOR"],
+    },
+    {
+      label: "Alert Params",
+      route: "/moderator/alert-params",
+      icon: "bell",
+      roles: ["MODERATOR"],
+    },
+    {
+      label: "Admin Incidents",
+      route: "/admin/incidents",
+      icon: "list-ul",
+      roles: ["ADMIN"],
+    },
+    {
+      label: "User Management",
+      route: "/admin/user-management",
+      icon: "people",
+      roles: ["ADMIN"],
+    },
+  ]
 
-      observer.next(user)
-      observer.complete()
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+  ) {
+    this.user$ = this.authService.user$
+  }
+
+  ngOnInit(): void {
+    // Pratimo promene korisnika
+    this.user$.pipe(takeUntil(this.destroy$)).subscribe((user) => {
+      this.currentUser = user
     })
   }
 
-  loginWithGoogle() {
-    window.location.href = "http://localhost:8080/auth-service/oauth2/authorization/google" // ili gateway ruta
+  ngOnDestroy(): void {
+    this.destroy$.next()
+    this.destroy$.complete()
   }
 
-  logout() {
-    // Implementiraj logout logiku
-    console.log("Logging out...")
+  // Dobijamo navigacione elemente na osnovu korisničke role
+  getNavigationItems(): NavigationItem[] {
+    if (!this.currentUser) {
+      return []
+    }
+
+    return this.navigationItems.filter((item) => item.roles.includes(this.currentUser!.role))
   }
 
-  toggleMenu() {
+  // Proveravamo da li je trenutna ruta aktivna
+  isRouteActive(route: string): boolean {
+    return this.router.url === route
+  }
+
+  loginWithGoogle(): void {
+    this.authService.loginWithGoogle()
+  }
+
+  logout(): void {
+    this.authService.logout()
+    this.isMenuOpen = false
+  }
+
+  toggleMenu(): void {
     this.isMenuOpen = !this.isMenuOpen
+  }
+
+  navigateTo(route: string): void {
+    this.router.navigate([route])
+    this.isMenuOpen = false
   }
 
   getInitials(name: string): string {
@@ -50,24 +118,33 @@ export class AppComponent {
       .map((n) => n[0])
       .join("")
       .toUpperCase()
-      .substring(0, 2) // Maksimalno 2 slova
+      .substring(0, 2)
   }
 
   getRoleColor(role: string): string {
     const roleColors: { [key: string]: string } = {
-      Administrator: "#e74c3c",
-      Moderator: "#f39c12",
-      User: "#95a5a6",
+      ADMIN: "#FFA07A",
+      MODERATOR: "#E6E6FA",
+      USER: "#F5F5F5",
     }
     return roleColors[role] || "#6c757d"
   }
 
   getRoleIcon(role: string): string {
     const roleIcons: { [key: string]: string } = {
-      Administrator: "shield-fill-check",
-      Moderator: "person-gear",
-      User: "eye-fill",
+      ADMIN: "shield-fill-check",
+      MODERATOR: "person-gear",
+      USER: "eye-fill",
     }
     return roleIcons[role] || "person-circle"
+  }
+
+  getRoleDisplayName(role: string): string {
+    const roleNames: { [key: string]: string } = {
+      ADMIN: "Administrator",
+      MODERATOR: "Moderator",
+      USER: "User",
+    }
+    return roleNames[role] || role
   }
 }

@@ -1,7 +1,6 @@
 <!-- MODERN HEADER -->
 <header class="app-header">
   <div class="header-container">
-    
     <!-- Logo/Brand Section -->
     <div class="brand-section">
       <div class="brand-icon">
@@ -12,47 +11,58 @@
       </div>
     </div>
 
-    <!-- Navigation (Optional - for future use) -->
-    <nav class="main-nav d-none d-lg-flex">
-      <a href="#" class="nav-link active">
-        <i class="bi bi-map"></i>
-        <span>Map View</span>
-      </a>
-      <a href="#" class="nav-link">
-        <i class="bi bi-list-ul"></i>
-        <span>Incidents</span>
-      </a>
-      <a href="#" class="nav-link">
-        <i class="bi bi-bar-chart"></i>
-        <span>Analytics</span>
+    <!-- Navigation (Visible only for MODERATOR and ADMIN) -->
+    <nav
+      class="main-nav d-none d-lg-flex"
+      *ngIf="getNavigationItems().length > 0"
+    >
+      <a
+        *ngFor="let item of getNavigationItems()"
+        [routerLink]="item.route"
+        class="nav-link"
+        [class.active]="isRouteActive(item.route)"
+        (click)="navigateTo(item.route)"
+      >
+        <i class="bi" [class]="'bi-' + item.icon"></i>
+        <span>{{ item.label }}</span>
       </a>
     </nav>
 
     <!-- User Section -->
     <div class="user-section">
-      
       <!-- Authenticated User -->
       <div class="user-info" *ngIf="user$ | async as user; else loginBlock">
-        
         <!-- User Details -->
         <div class="user-details d-none d-md-block">
           <div class="user-name">{{ user.name }}</div>
           <div class="user-role">
             <i class="bi" [class]="'bi-' + getRoleIcon(user.role)"></i>
-            <span [style.color]="getRoleColor(user.role)">{{ user.role }}</span>
+            <span [style.color]="getRoleColor(user.role)">{{
+              getRoleDisplayName(user.role)
+            }}</span>
           </div>
         </div>
 
         <!-- User Avatar with Dropdown -->
         <div class="user-avatar-container" (click)="toggleMenu()">
-          <div class="user-avatar" 
-               [style.background-image]="user.avatar ? 'url(' + user.avatar + ')' : 'none'"
-               [style.background-color]="!user.avatar ? getRoleColor(user.role) : 'transparent'">
-            <span *ngIf="!user.avatar" class="avatar-initials">{{ getInitials(user.name) }}</span>
+          <div
+            class="user-avatar"
+            [style.background-image]="
+              user.avatar ? 'url(' + user.avatar + ')' : 'none'
+            "
+            [style.background-color]="
+              !user.avatar ? getRoleColor(user.role) : 'transparent'
+            "
+          >
+            <span *ngIf="!user.avatar" class="avatar-initials">{{
+              getInitials(user.name)
+            }}</span>
           </div>
           <div class="status-indicator online"></div>
-          <i class="bi bi-chevron-down dropdown-arrow" 
-             [class.rotated]="isMenuOpen"></i>
+          <i
+            class="bi bi-chevron-down dropdown-arrow"
+            [class.rotated]="isMenuOpen"
+          ></i>
         </div>
 
         <!-- Dropdown Menu -->
@@ -61,8 +71,34 @@
             <div class="dropdown-user-info">
               <div class="dropdown-name">{{ user.name }}</div>
               <div class="dropdown-email">{{ user.email }}</div>
+              <div class="dropdown-role">
+                <i class="bi" [class]="'bi-' + getRoleIcon(user.role)"></i>
+                <span [style.color]="getRoleColor(user.role)">{{
+                  getRoleDisplayName(user.role)
+                }}</span>
+              </div>
             </div>
           </div>
+
+          <!-- Mobile Navigation (visible only on mobile for MODERATOR and ADMIN) -->
+          <div
+            class="mobile-nav d-lg-none"
+            *ngIf="getNavigationItems().length > 0"
+          >
+            <div class="dropdown-divider"></div>
+            <div class="mobile-nav-items">
+              <button
+                *ngFor="let item of getNavigationItems()"
+                class="dropdown-item nav-item"
+                [class.active]="isRouteActive(item.route)"
+                (click)="navigateTo(item.route)"
+              >
+                <i class="bi" [class]="'bi-' + item.icon"></i>
+                <span>{{ item.label }}</span>
+              </button>
+            </div>
+          </div>
+
           <div class="dropdown-divider"></div>
           <div class="dropdown-items">
             <button class="dropdown-item logout-item" (click)="logout()">
@@ -80,12 +116,15 @@
           <span>Sign in with Google</span>
         </button>
       </ng-template>
-
     </div>
   </div>
 
   <!-- Mobile Menu Toggle -->
-  <button class="mobile-menu-toggle d-lg-none" (click)="toggleMenu()">
+  <button
+    class="mobile-menu-toggle d-lg-none"
+    (click)="toggleMenu()"
+    *ngIf="currentUser"
+  >
     <i class="bi bi-list"></i>
   </button>
 </header>
@@ -96,6 +135,8 @@
 </main>
 
 <!-- Overlay for dropdown -->
-<div class="dropdown-overlay" 
-     [class.show]="isMenuOpen" 
-     (click)="isMenuOpen = false"></div>
+<div
+  class="dropdown-overlay"
+  [class.show]="isMenuOpen"
+  (click)="isMenuOpen = false"
+></div>
