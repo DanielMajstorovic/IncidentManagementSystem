@@ -4,7 +4,7 @@ import eu.reportincident.userservice.exception.UserBlockedException;
 import eu.reportincident.userservice.model.dto.UserLoginRequest;
 import eu.reportincident.userservice.model.dto.UserLoginResponse;
 import eu.reportincident.userservice.model.entity.User;
-import eu.reportincident.userservice.model.enums.Role;
+import eu.reportincident.userservice.model.entity.Role;
 import eu.reportincident.userservice.model.repository.UserRepository;
 import eu.reportincident.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;

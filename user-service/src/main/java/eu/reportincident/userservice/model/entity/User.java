@@ -1,6 +1,5 @@
 package eu.reportincident.userservice.model.entity;
 
-import eu.reportincident.userservice.model.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

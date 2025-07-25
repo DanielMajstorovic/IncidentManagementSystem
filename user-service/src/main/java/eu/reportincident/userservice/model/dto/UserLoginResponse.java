@@ -1,6 +1,6 @@
 package eu.reportincident.userservice.model.dto;
 
-import eu.reportincident.userservice.model.enums.Role;
+import eu.reportincident.userservice.model.entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
