@@ -2,7 +2,11 @@ package eu.reportincident.userservice.model.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -24,5 +28,7 @@ public class Role {
             joinColumns = @JoinColumn(name = "role_id"),
             inverseJoinColumns = @JoinColumn(name = "endpoint_id")
     )
-    private Set<Endpoint> endpoints; // Direktna veza sa endpointima
+    @ToString.Exclude // Sprečava rekurzivni poziv u toString()
+    @EqualsAndHashCode.Exclude // Sprečava rekurzivni poziv u equals/hashCode
+    private Set<Endpoint> endpoints = new HashSet<>();
 }

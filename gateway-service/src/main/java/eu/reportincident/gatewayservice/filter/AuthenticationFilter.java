@@ -7,6 +7,7 @@ import eu.reportincident.gatewayservice.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     private final RouteValidator routeValidator;
     private final PermissionCacheService permissionCacheService;
 
-    public AuthenticationFilter(JwtUtil jwtUtil, RouteValidator routeValidator, PermissionCacheService permissionCacheService) {
+    public AuthenticationFilter(JwtUtil jwtUtil, RouteValidator routeValidator, @Lazy PermissionCacheService permissionCacheService) {
         super(Config.class);
         this.jwtUtil = jwtUtil;
         this.routeValidator = routeValidator;

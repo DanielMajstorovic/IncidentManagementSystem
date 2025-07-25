@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core"
 import { HttpClient, HttpParams } from "@angular/common/http"
 import { Observable, BehaviorSubject, of } from "rxjs"
 import { map, catchError, shareReplay } from "rxjs/operators"
-import { Incident, Page, FilterRequest } from "../models/incident.model"
+import { Incident, Page, FilterRequest, IncidentRequest } from "../models/incident.model"
 
 @Injectable({
   providedIn: "root",
@@ -31,6 +31,14 @@ export class IncidentService {
         throw error
       }),
     )
+  }
+
+  createIncident(request: IncidentRequest): Observable<Incident> {
+    return this.http.post<Incident>(this.apiUrl, request)
+  }
+
+  uploadFiles(formData: FormData): Observable<string[]> {
+    return this.http.post<string[]>(`${this.apiUrl}/upload`, formData)
   }
 
   // Optimizovano sa caching-om
