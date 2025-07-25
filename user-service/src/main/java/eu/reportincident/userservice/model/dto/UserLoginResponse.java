@@ -8,5 +8,5 @@ import lombok.Data;
 @AllArgsConstructor
 public class UserLoginResponse {
     private Long userId;
-    private Role role;
+    private String role;
 }
