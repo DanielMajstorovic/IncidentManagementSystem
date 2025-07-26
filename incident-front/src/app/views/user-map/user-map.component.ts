@@ -95,6 +95,7 @@ export class UserMapComponent implements OnInit, OnDestroy {
   // Map properties (inherited from main-map)
   map!: L.Map;
   locationMap!: L.Map;
+  private locationMarker: L.Marker | null = null;
   mapOptions: L.MapOptions = {
     layers: [
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -114,8 +115,8 @@ export class UserMapComponent implements OnInit, OnDestroy {
         attribution: '© OpenStreetMap',
       }),
     ],
-    zoom: 10,
-    center: L.latLng(44.2, 17.8),
+    zoom: 13, // Povećan zoom za bolji prikaz grada
+    center: L.latLng(44.7722, 17.1911), // Koordinate Banja Luke
   };
 
   incidentLayers: L.Layer[] = [];
@@ -248,8 +249,16 @@ export class UserMapComponent implements OnInit, OnDestroy {
     this.addMapControls();
   }
 
+  private setDefaultLocationPin(): void {
+    const banjaLukaCoords = { lat: 44.7722, lng: 17.1911 };
+    this.setSelectedLocation(banjaLukaCoords.lat, banjaLukaCoords.lng);
+  }
+
   onLocationMapReady(map: L.Map): void {
     this.locationMap = map;
+
+    // Postavite default pin u centru Banja Luke
+    this.setDefaultLocationPin();
   }
 
   private addMapControls(): void {
@@ -304,16 +313,63 @@ export class UserMapComponent implements OnInit, OnDestroy {
       longitude: lng,
     });
 
+    // Remove existing marker if it exists
+    if (this.locationMarker) {
+      this.locationMap.removeLayer(this.locationMarker);
+    }
+
     // Clear existing location layers
     this.locationLayers = [];
 
-    // Add marker to location map
-    const marker = L.marker([lat, lng], {
+    // Create draggable marker
+    this.locationMarker = L.marker([lat, lng], {
       icon: createColoredIcon('green'),
+      draggable: true, // Omogući dragging
     });
-    this.locationLayers.push(marker);
+
+    // Add drag event listener
+    this.locationMarker.on('dragend', (event: any) => {
+      const marker = event.target;
+      const position = marker.getLatLng();
+      this.onMarkerDragEnd(position.lat, position.lng);
+    });
+
+    // Add marker to map
+    this.locationMarker.addTo(this.locationMap);
+    this.locationLayers.push(this.locationMarker);
 
     // Try to get address information via reverse geocoding
+    try {
+      const addressData = await this.reverseGeocode(lat, lng);
+      if (addressData) {
+        this.reportForm.patchValue({
+          address: addressData.address || '',
+          city: addressData.city || '',
+          state: addressData.state || '',
+          country: addressData.country || '',
+          zipcode: addressData.zipcode || '',
+        });
+
+        this.selectedLocation = { ...this.selectedLocation, ...addressData };
+      }
+    } catch (error) {
+      console.warn('Reverse geocoding failed:', error);
+    }
+  }
+
+  private async onMarkerDragEnd(lat: number, lng: number): Promise<void> {
+    this.selectedLocation = { latitude: lat, longitude: lng };
+
+    // Update form with new coordinates
+    this.reportForm.patchValue({
+      latitude: lat,
+      longitude: lng,
+    });
+
+    // Trigger change detection
+    this.cdr.detectChanges();
+
+    // Try to get address information for new position
     try {
       const addressData = await this.reverseGeocode(lat, lng);
       if (addressData) {
@@ -379,14 +435,13 @@ export class UserMapComponent implements OnInit, OnDestroy {
           this.locationMap.setView([lat, lng], 15);
         }
 
-        // Set the location
+        // Update the existing marker position
         await this.setSelectedLocation(lat, lng);
       }
     } catch (error) {
       console.error('Location search error:', error);
     }
   }
-
   getCurrentLocation(): void {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -399,7 +454,7 @@ export class UserMapComponent implements OnInit, OnDestroy {
             this.locationMap.setView([lat, lng], 15);
           }
 
-          // Set the location
+          // Update the existing marker position
           await this.setSelectedLocation(lat, lng);
         },
         (error) => {
@@ -453,9 +508,7 @@ export class UserMapComponent implements OnInit, OnDestroy {
   canProceedToNextStep(): boolean {
     switch (this.currentStep) {
       case 1:
-        return (
-          this.reportForm.get('type')?.valid || false
-        );
+        return this.reportForm.get('type')?.valid || false;
       case 2:
         return (
           (this.selectedLocation !== null &&
@@ -639,6 +692,12 @@ export class UserMapComponent implements OnInit, OnDestroy {
     this.uploadProgress = 0;
     this.isSubmitting = false;
     this.locationLayers = [];
+
+    // Remove existing marker
+    if (this.locationMarker && this.locationMap) {
+      this.locationMap.removeLayer(this.locationMarker);
+      this.locationMarker = null;
+    }
 
     this.reportForm.reset({
       type: '',

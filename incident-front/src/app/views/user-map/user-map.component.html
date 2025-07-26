@@ -4,15 +4,27 @@
     <div class="filter-header">
       <div class="filter-title">
         <h4><i class="bi bi-funnel-fill"></i> Filters</h4>
-        <span class="filter-badge" *ngIf="activeFiltersCount > 0">{{ activeFiltersCount }}</span>
+        <span class="filter-badge" *ngIf="activeFiltersCount > 0">{{
+          activeFiltersCount
+        }}</span>
       </div>
       <div class="filter-actions">
-        <button class="btn btn-sm btn-outline-secondary me-2" (click)="resetFilters()"
-                [disabled]="activeFiltersCount === 0">
+        <button
+          class="btn btn-sm btn-outline-secondary me-2"
+          (click)="resetFilters()"
+          [disabled]="activeFiltersCount === 0"
+        >
           <i class="bi bi-arrow-clockwise"></i> Reset
         </button>
-        <button class="btn btn-sm btn-outline-primary d-lg-none" (click)="toggleFilterPanel()">
-          <i class="bi" [class.bi-chevron-left]="!isFilterCollapsed" [class.bi-chevron-right]="isFilterCollapsed"></i>
+        <button
+          class="btn btn-sm btn-outline-primary d-lg-none"
+          (click)="toggleFilterPanel()"
+        >
+          <i
+            class="bi"
+            [class.bi-chevron-left]="!isFilterCollapsed"
+            [class.bi-chevron-right]="isFilterCollapsed"
+          ></i>
         </button>
       </div>
     </div>
@@ -25,57 +37,85 @@
           </label>
           <div class="input-group">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input type="text" id="location" class="form-control"
-                   formControlName="location"
-                   placeholder="e.g., Banja Luka">
+            <input
+              type="text"
+              id="location"
+              class="form-control"
+              formControlName="location"
+              placeholder="e.g., Banja Luka"
+            />
           </div>
         </div>
-        
+
         <!-- Incident Type with Icons -->
         <div class="form-group">
           <label for="type" class="form-label">
             <i class="bi bi-tags-fill text-warning"></i> Incident Type
           </label>
-          <select id="type" class="form-select" formControlName="incidentType" (change)="onTypeChange()">
+          <select
+            id="type"
+            class="form-select"
+            formControlName="incidentType"
+            (change)="onTypeChange()"
+          >
             <option value="">All Types</option>
             <option *ngFor="let type of incidentTypes" [value]="type">
-              {{ type | titlecase | replace: '_':' ' }}
+              {{ type | titlecase | replace : "_" : " " }}
             </option>
           </select>
         </div>
-        
+
         <!-- Incident Subtype -->
         <div class="form-group">
           <label for="subtype" class="form-label">
             <i class="bi bi-tag-fill text-info"></i> Incident Subtype
           </label>
-          <select id="subtype" class="form-select"
-                  formControlName="incidentSubtype"
-                  [disabled]="!filterForm.get('incidentType')?.value">
+          <select
+            id="subtype"
+            class="form-select"
+            formControlName="incidentSubtype"
+            [disabled]="!filterForm.get('incidentType')?.value"
+          >
             <option value="">All Subtypes</option>
             <option *ngFor="let subtype of currentSubtypes" [value]="subtype">
-              {{ subtype | titlecase | replace: '_':' ' }}
+              {{ subtype | titlecase | replace : "_" : " " }}
             </option>
           </select>
         </div>
-        
+
         <!-- Time Range with Better Design -->
         <div class="form-group">
           <label class="form-label">
             <i class="bi bi-clock-fill text-success"></i> Time Range
           </label>
           <div class="time-range-grid">
-            <input type="radio" class="btn-check" formControlName="timeRange"
-                   id="timeAll" value="" autocomplete="off">
+            <input
+              type="radio"
+              class="btn-check"
+              formControlName="timeRange"
+              id="timeAll"
+              value=""
+              autocomplete="off"
+            />
             <label class="btn btn-outline-primary time-btn" for="timeAll">
               <i class="bi bi-infinity"></i> All Time
             </label>
-            
+
             <ng-container *ngFor="let range of timeRanges">
-              <input type="radio" class="btn-check" formControlName="timeRange"
-                     [id]="'time' + range.value" [value]="range.value" autocomplete="off">
-              <label class="btn btn-outline-primary time-btn" [for]="'time' + range.value">
-                <i class="bi" [class]="'bi-' + range.icon"></i> {{ range.label }}
+              <input
+                type="radio"
+                class="btn-check"
+                formControlName="timeRange"
+                [id]="'time' + range.value"
+                [value]="range.value"
+                autocomplete="off"
+              />
+              <label
+                class="btn btn-outline-primary time-btn"
+                [for]="'time' + range.value"
+              >
+                <i class="bi" [class]="'bi-' + range.icon"></i>
+                {{ range.label }}
               </label>
             </ng-container>
           </div>
@@ -95,13 +135,14 @@
     </div>
 
     <!-- Map Frame -->
-    <div class="map-frame"
-         leaflet
-         [leafletOptions]="mapOptions"
-         [leafletLayers]="incidentLayers"
-         (leafletMapReady)="onMapReady($event)"
-         (leafletMapClick)="onMapClick($event)">
-    </div>
+    <div
+      class="map-frame"
+      leaflet
+      [leafletOptions]="mapOptions"
+      [leafletLayers]="incidentLayers"
+      (leafletMapReady)="onMapReady($event)"
+      (leafletMapClick)="onMapClick($event)"
+    ></div>
 
     <!-- Enhanced Legend -->
     <div class="map-legend">
@@ -110,8 +151,15 @@
       </div>
       <div class="legend-items">
         <div *ngFor="let item of legendData" class="legend-item">
-          <img [src]="'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-' + item.color + '.png'"
-               class="legend-icon" [alt]="item.type">
+          <img
+            [src]="
+              'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-' +
+              item.color +
+              '.png'
+            "
+            class="legend-icon"
+            [alt]="item.type"
+          />
           <span class="legend-text">
             <i class="bi" [class]="'bi-' + item.icon"></i>
             {{ item.type | titlecase }}
@@ -127,16 +175,26 @@
     </button>
 
     <!-- Mobile Filter Toggle -->
-    <button class="mobile-filter-toggle d-lg-none" (click)="toggleFilterPanel()">
+    <button
+      class="mobile-filter-toggle d-lg-none"
+      (click)="toggleFilterPanel()"
+    >
       <i class="bi bi-funnel-fill"></i>
-      <span class="filter-count" *ngIf="activeFiltersCount > 0">{{ activeFiltersCount }}</span>
+      <span class="filter-count" *ngIf="activeFiltersCount > 0">{{
+        activeFiltersCount
+      }}</span>
     </button>
   </div>
 </div>
 
 <!-- INCIDENT DETAIL MODAL (same as main-map) -->
-<div class="modal fade" id="incidentDetailModal" tabindex="-1"
-     aria-labelledby="incidentDetailModalLabel" aria-hidden="true">
+<div
+  class="modal fade"
+  id="incidentDetailModal"
+  tabindex="-1"
+  aria-labelledby="incidentDetailModalLabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content modern-modal" *ngIf="currentModalState.incident">
       <!-- Modal Header -->
@@ -144,13 +202,24 @@
         <div class="modal-title-container">
           <h5 class="modal-title" id="incidentDetailModalLabel">
             <i class="bi bi-info-circle-fill me-2 white"></i>
-            <span class="incident-type">{{ currentModalState.incident.type | titlecase | replace: '_':' ' }}</span>
-            <span class="incident-subtype">{{ currentModalState.incident.subtype | titlecase | replace: '_':' ' }}</span>
+            <span class="incident-type">{{
+              currentModalState.incident.type | titlecase | replace : "_" : " "
+            }}</span>
+            <span class="incident-subtype">{{
+              currentModalState.incident.subtype
+                | titlecase
+                | replace : "_" : " "
+            }}</span>
           </h5>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
       </div>
-      
+
       <!-- Modal Body -->
       <div class="modal-body">
         <div class="row g-4">
@@ -159,84 +228,130 @@
             <div class="images-section">
               <h6 class="section-title">
                 <i class="bi bi-images"></i> Attached Photos
-                <span class="image-count" *ngIf="currentModalState.imageUrls.length > 0">
+                <span
+                  class="image-count"
+                  *ngIf="currentModalState.imageUrls.length > 0"
+                >
                   ({{ currentModalState.imageUrls.length }})
                 </span>
               </h6>
-              
+
               <!-- Loading State -->
               <div *ngIf="currentModalState.isLoading" class="image-loading">
                 <div class="skeleton-loader">
                   <div class="skeleton-image"></div>
                   <div class="skeleton-thumbnails">
-                    <div class="skeleton-thumb" *ngFor="let i of [1,2,3]"></div>
+                    <div
+                      class="skeleton-thumb"
+                      *ngFor="let i of [1, 2, 3]"
+                    ></div>
                   </div>
                 </div>
                 <div class="loading-text">
-                  <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                  <div
+                    class="spinner-border spinner-border-sm text-primary"
+                    role="status"
+                  ></div>
                   <span class="ms-2">Loading images...</span>
                 </div>
               </div>
-              
+
               <!-- Error State -->
-              <div *ngIf="currentModalState.error && !currentModalState.isLoading" class="image-error">
+              <div
+                *ngIf="currentModalState.error && !currentModalState.isLoading"
+                class="image-error"
+              >
                 <div class="alert alert-warning">
                   <i class="bi bi-exclamation-triangle"></i>
                   {{ currentModalState.error }}
                 </div>
               </div>
-              
+
               <!-- Images Content -->
-              <div *ngIf="!currentModalState.isLoading && !currentModalState.error">
-                <div *ngIf="currentModalState.imageUrls.length > 0; else noPhotos" class="image-gallery">
+              <div
+                *ngIf="!currentModalState.isLoading && !currentModalState.error"
+              >
+                <div
+                  *ngIf="currentModalState.imageUrls.length > 0; else noPhotos"
+                  class="image-gallery"
+                >
                   <!-- Main Image -->
                   <div class="main-image-container">
-                    <img [src]="currentModalState.imageUrls[currentModalState.currentImageIndex]"
-                         class="main-image"
-                         alt="Incident Photo"
-                         (error)="onImageError($event)">
-                    
+                    <img
+                      [src]="
+                        currentModalState.imageUrls[
+                          currentModalState.currentImageIndex
+                        ]
+                      "
+                      class="main-image"
+                      alt="Incident Photo"
+                      (error)="onImageError($event)"
+                    />
+
                     <!-- Navigation Arrows -->
-                    <button class="image-nav prev" (click)="previousImage()"
-                            *ngIf="currentModalState.imageUrls.length > 1">
+                    <button
+                      class="image-nav prev"
+                      (click)="previousImage()"
+                      *ngIf="currentModalState.imageUrls.length > 1"
+                    >
                       <i class="bi bi-chevron-left"></i>
                     </button>
-                    <button class="image-nav next" (click)="nextImage()"
-                            *ngIf="currentModalState.imageUrls.length > 1">
+                    <button
+                      class="image-nav next"
+                      (click)="nextImage()"
+                      *ngIf="currentModalState.imageUrls.length > 1"
+                    >
                       <i class="bi bi-chevron-right"></i>
                     </button>
-                    
+
                     <!-- Image Counter -->
-                    <div class="image-counter" *ngIf="currentModalState.imageUrls.length > 1">
-                      {{ currentModalState.currentImageIndex + 1 }} / {{ currentModalState.imageUrls.length }}
+                    <div
+                      class="image-counter"
+                      *ngIf="currentModalState.imageUrls.length > 1"
+                    >
+                      {{ currentModalState.currentImageIndex + 1 }} /
+                      {{ currentModalState.imageUrls.length }}
                     </div>
                   </div>
-                  
+
                   <!-- Thumbnails -->
-                  <div class="thumbnails" *ngIf="currentModalState.imageUrls.length > 1">
-                    <button *ngFor="let url of currentModalState.imageUrls; let i = index"
-                            class="thumbnail"
-                            [class.active]="i === currentModalState.currentImageIndex"
-                            (click)="goToImage(i)">
-                      <img [src]="url" [alt]="'Thumbnail ' + (i + 1)"
-                           (error)="onImageError($event)">
+                  <div
+                    class="thumbnails"
+                    *ngIf="currentModalState.imageUrls.length > 1"
+                  >
+                    <button
+                      *ngFor="
+                        let url of currentModalState.imageUrls;
+                        let i = index
+                      "
+                      class="thumbnail"
+                      [class.active]="i === currentModalState.currentImageIndex"
+                      (click)="goToImage(i)"
+                    >
+                      <img
+                        [src]="url"
+                        [alt]="'Thumbnail ' + (i + 1)"
+                        (error)="onImageError($event)"
+                      />
                     </button>
                   </div>
                 </div>
-                
+
                 <!-- No Photos State -->
                 <ng-template #noPhotos>
                   <div class="no-photos">
                     <div class="no-photos-icon">
                       <i class="bi bi-image-alt"></i>
                     </div>
-                    <p class="no-photos-text">No photos were attached to this incident.</p>
+                    <p class="no-photos-text">
+                      No photos were attached to this incident.
+                    </p>
                   </div>
                 </ng-template>
               </div>
             </div>
           </div>
-          
+
           <!-- Information Section -->
           <div class="col-lg-5">
             <div class="info-section">
@@ -251,10 +366,12 @@
                     <span>Description</span>
                   </div>
                   <div class="info-card-body">
-                    <p class="description-text">{{ currentModalState.incident.description }}</p>
+                    <p class="description-text">
+                      {{ currentModalState.incident.description }}
+                    </p>
                   </div>
                 </div>
-                
+
                 <!-- Location Card -->
                 <div class="info-card location-card">
                   <div class="info-card-header">
@@ -263,13 +380,21 @@
                   </div>
                   <div class="info-card-body">
                     <!-- Full Address Display -->
-                    <div class="location-address" *ngIf="getFormattedAddress(currentModalState.incident.location); let address">
+                    <div
+                      class="location-address"
+                      *ngIf="
+                        getFormattedAddress(
+                          currentModalState.incident.location
+                        );
+                        let address
+                      "
+                    >
                       <div class="address-main">
                         <i class="bi bi-geo"></i>
                         <span class="address-text">{{ address }}</span>
                       </div>
                     </div>
-                    
+
                     <!-- Coordinates Section -->
                     <div class="coordinates-section">
                       <div class="coordinates-header">
@@ -279,36 +404,62 @@
                       <div class="coordinates-grid">
                         <div class="coordinate-item">
                           <span class="coord-label">Latitude</span>
-                          <span class="coord-value">{{ currentModalState.incident.location.latitude | number:'1.6-6' }}°</span>
+                          <span class="coord-value"
+                            >{{
+                              currentModalState.incident.location.latitude
+                                | number : "1.6-6"
+                            }}°</span
+                          >
                         </div>
                         <div class="coordinate-item">
                           <span class="coord-label">Longitude</span>
-                          <span class="coord-value">{{ currentModalState.incident.location.longitude | number:'1.6-6' }}°</span>
+                          <span class="coord-value"
+                            >{{
+                              currentModalState.incident.location.longitude
+                                | number : "1.6-6"
+                            }}°</span
+                          >
                         </div>
                       </div>
-                      
+
                       <!-- Copy Coordinates Button -->
-                      <button class="btn btn-sm btn-outline-primary copy-coords-btn"
-                              (click)="copyCoordinates(currentModalState.incident.location)">
+                      <button
+                        class="btn btn-sm btn-outline-primary copy-coords-btn"
+                        (click)="
+                          copyCoordinates(currentModalState.incident.location)
+                        "
+                      >
                         <i class="bi bi-clipboard"></i>
                         Copy Coordinates
                       </button>
                     </div>
-                    
+
                     <!-- Map Preview Button -->
                     <div class="location-actions">
-                      <button class="btn btn-primary btn-sm" (click)="openInMaps(currentModalState.incident.location)">
+                      <button
+                        class="btn btn-primary btn-sm"
+                        (click)="
+                          openInMaps(currentModalState.incident.location)
+                        "
+                      >
                         <i class="bi bi-map"></i>
                         View in Maps
                       </button>
-                      <button class="btn btn-outline-secondary btn-sm" (click)="centerMapOnLocation(currentModalState.incident.location)">
+                      <button
+                        class="btn btn-outline-secondary btn-sm"
+                        (click)="
+                          centerMapOnLocation(
+                            currentModalState.incident.location
+                          )
+                        "
+                      >
                         <i class="bi bi-crosshair2"></i>
                         Center on Map
                       </button>
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Status & Date Card -->
                 <div class="info-card">
                   <div class="info-card-header">
@@ -318,11 +469,15 @@
                   <div class="info-card-body">
                     <div class="timeline-item">
                       <span class="timeline-label">Reported:</span>
-                      <span class="timeline-value">{{ currentModalState.incident.reportedAt | date:'medium' }}</span>
+                      <span class="timeline-value">{{
+                        currentModalState.incident.reportedAt | date : "medium"
+                      }}</span>
                     </div>
                     <div class="timeline-item">
                       <span class="timeline-label">Status:</span>
-                      <span class="badge bg-success">{{ currentModalState.incident.status }}</span>
+                      <span class="badge bg-success">{{
+                        currentModalState.incident.status
+                      }}</span>
                     </div>
                   </div>
                 </div>
@@ -336,7 +491,13 @@
 </div>
 
 <!-- REPORT INCIDENT MODAL -->
-<div class="modal fade" id="reportIncidentModal" tabindex="-1" aria-labelledby="reportIncidentModalLabel" aria-hidden="true">
+<div
+  class="modal fade"
+  id="reportIncidentModal"
+  tabindex="-1"
+  aria-labelledby="reportIncidentModalLabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content report-modal">
       <!-- Modal Header -->
@@ -347,25 +508,46 @@
             Report New Incident
           </h5>
           <div class="stepper-progress">
-            <div class="step" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">
+            <div
+              class="step"
+              [class.active]="currentStep >= 1"
+              [class.completed]="currentStep > 1"
+            >
               <span class="step-number">1</span>
               <span class="step-label">Type</span>
             </div>
-            <div class="step" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2">
+            <div
+              class="step"
+              [class.active]="currentStep >= 2"
+              [class.completed]="currentStep > 2"
+            >
               <span class="step-number">2</span>
               <span class="step-label">Location</span>
             </div>
-            <div class="step" [class.active]="currentStep >= 3" [class.completed]="currentStep > 3">
+            <div
+              class="step"
+              [class.active]="currentStep >= 3"
+              [class.completed]="currentStep > 3"
+            >
               <span class="step-number">3</span>
               <span class="step-label">Description</span>
             </div>
-            <div class="step" [class.active]="currentStep >= 4" [class.completed]="currentStep > 4">
+            <div
+              class="step"
+              [class.active]="currentStep >= 4"
+              [class.completed]="currentStep > 4"
+            >
               <span class="step-number">4</span>
               <span class="step-label">Images</span>
             </div>
           </div>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
       </div>
 
       <!-- Modal Body -->
@@ -374,35 +556,67 @@
           <!-- Step 1: Incident Type -->
           <div class="step-content" *ngIf="currentStep === 1">
             <div class="step-header">
-              <h6><i class="bi bi-tags-fill text-primary"></i> Select Incident Type</h6>
-              <p class="text-muted">Choose the type and subtype of the incident you want to report.</p>
+              <h6>
+                <i class="bi bi-tags-fill text-primary"></i> Select Incident
+                Type
+              </h6>
+              <p class="text-muted">
+                Choose the type and subtype of the incident you want to report.
+              </p>
             </div>
-            
+
             <div class="row g-4">
               <div class="col-md-6">
-                <label for="reportType" class="form-label">Incident Type *</label>
-                <select id="reportType" class="form-select" formControlName="type" (change)="onReportTypeChange()">
+                <label for="reportType" class="form-label"
+                  >Incident Type *</label
+                >
+                <select
+                  id="reportType"
+                  class="form-select"
+                  formControlName="type"
+                  (change)="onReportTypeChange()"
+                >
                   <option value="">Select incident type</option>
                   <option *ngFor="let type of incidentTypes" [value]="type">
-                    {{ type | titlecase | replace: '_':' ' }}
+                    {{ type | titlecase | replace : "_" : " " }}
                   </option>
                 </select>
-                <div class="invalid-feedback" *ngIf="reportForm.get('type')?.invalid && reportForm.get('type')?.touched">
+                <div
+                  class="invalid-feedback"
+                  *ngIf="
+                    reportForm.get('type')?.invalid &&
+                    reportForm.get('type')?.touched
+                  "
+                >
                   Please select an incident type.
                 </div>
               </div>
-              
+
               <div class="col-md-6">
-                <label for="reportSubtype" class="form-label">Incident Subtype</label>
-                <select id="reportSubtype" class="form-select" 
-                        formControlName="subtype"
-                        [disabled]="!reportForm.get('type')?.value">
+                <label for="reportSubtype" class="form-label"
+                  >Incident Subtype</label
+                >
+                <select
+                  id="reportSubtype"
+                  class="form-select"
+                  formControlName="subtype"
+                  [disabled]="!reportForm.get('type')?.value"
+                >
                   <option value="">Select incident subtype</option>
-                  <option *ngFor="let subtype of currentReportSubtypes" [value]="subtype">
-                    {{ subtype | titlecase | replace: '_':' ' }}
+                  <option
+                    *ngFor="let subtype of currentReportSubtypes"
+                    [value]="subtype"
+                  >
+                    {{ subtype | titlecase | replace : "_" : " " }}
                   </option>
                 </select>
-                <div class="invalid-feedback" *ngIf="reportForm.get('subtype')?.invalid && reportForm.get('subtype')?.touched">
+                <div
+                  class="invalid-feedback"
+                  *ngIf="
+                    reportForm.get('subtype')?.invalid &&
+                    reportForm.get('subtype')?.touched
+                  "
+                >
                   Please select an incident subtype.
                 </div>
               </div>
@@ -412,30 +626,51 @@
           <!-- Step 2: Location -->
           <div class="step-content" *ngIf="currentStep === 2">
             <div class="step-header">
-              <h6><i class="bi bi-geo-alt-fill text-danger"></i> Select Location</h6>
-              <p class="text-muted">Choose the location where the incident occurred. You can click on the map or search for an address.</p>
+              <h6>
+                <i class="bi bi-geo-alt-fill text-danger"></i> Select Location
+              </h6>
+              <p class="text-muted">
+                Choose the location where the incident occurred. You can click
+                on the map or search for an address.
+              </p>
             </div>
-            
+
             <div class="location-selection">
               <!-- Location Search -->
               <div class="row g-3 mb-4">
                 <div class="col-md-8">
-                  <label for="locationSearch" class="form-label">Search Address</label>
+                  <label for="locationSearch" class="form-label"
+                    >Search Address</label
+                  >
                   <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                    <input type="text" id="locationSearch" class="form-control" 
-                           [(ngModel)]="locationSearchQuery" 
-                           [ngModelOptions]="{standalone: true}"
-                           placeholder="Enter address or place name"
-                           (keyup.enter)="searchLocation()">
-                    <button class="btn btn-outline-secondary" type="button" (click)="searchLocation()">
+                    <span class="input-group-text"
+                      ><i class="bi bi-search"></i
+                    ></span>
+                    <input
+                      type="text"
+                      id="locationSearch"
+                      class="form-control"
+                      [(ngModel)]="locationSearchQuery"
+                      [ngModelOptions]="{ standalone: true }"
+                      placeholder="Enter address or place name"
+                      (keyup.enter)="searchLocation()"
+                    />
+                    <button
+                      class="btn btn-outline-secondary"
+                      type="button"
+                      (click)="searchLocation()"
+                    >
                       <i class="bi bi-search"></i>
                     </button>
                   </div>
                 </div>
                 <div class="col-md-4">
                   <label class="form-label">&nbsp;</label>
-                  <button type="button" class="btn btn-outline-primary w-100" (click)="getCurrentLocation()">
+                  <button
+                    type="button"
+                    class="btn btn-outline-primary w-100"
+                    (click)="getCurrentLocation()"
+                  >
                     <i class="bi bi-geo-alt"></i> Use My Location
                   </button>
                 </div>
@@ -443,16 +678,17 @@
 
               <!-- Mini Map for Location Selection -->
               <div class="location-map-container">
-                <div class="location-map" 
-                     leaflet 
-                     [leafletOptions]="locationMapOptions"
-                     [leafletLayers]="locationLayers"
-                     (leafletMapReady)="onLocationMapReady($event)"
-                     (leafletMapClick)="onLocationMapClick($event)">
-                </div>
+                <div
+                  class="location-map"
+                  leaflet
+                  [leafletOptions]="locationMapOptions"
+                  [leafletLayers]="locationLayers"
+                  (leafletMapReady)="onLocationMapReady($event)"
+                  (leafletMapClick)="onLocationMapClick($event)"
+                ></div>
                 <div class="map-instructions">
                   <i class="bi bi-info-circle"></i>
-                  Click on the map to select the incident location
+                  Drag the marker to select the exact location of the incident.
                 </div>
               </div>
 
@@ -460,66 +696,126 @@
               <div class="location-details" *ngIf="selectedLocation">
                 <h6 class="mb-3"><i class="bi bi-geo"></i> Location Details</h6>
                 <div class="row g-3">
+                  <!-- Koordinate kao readonly tekst -->
                   <div class="col-md-6">
-                    <label for="latitude" class="form-label">Latitude *</label>
-                    <input type="number" id="latitude" class="form-control" 
-                           formControlName="latitude" readonly>
+                    <label class="form-label">Latitude</label>
+                    <div class="coordinate-display">
+                      <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+                      <span class="coordinate-value"
+                        >{{
+                          selectedLocation.latitude | number : "1.6-6"
+                        }}°</span
+                      >
+                    </div>
                   </div>
                   <div class="col-md-6">
-                    <label for="longitude" class="form-label">Longitude *</label>
-                    <input type="number" id="longitude" class="form-control" 
-                           formControlName="longitude" readonly>
+                    <label class="form-label">Longitude</label>
+                    <div class="coordinate-display">
+                      <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+                      <span class="coordinate-value"
+                        >{{
+                          selectedLocation.longitude | number : "1.6-6"
+                        }}°</span
+                      >
+                    </div>
                   </div>
+
+                  <!-- Ostala polja ostaju ista -->
                   <div class="col-md-12">
                     <label for="address" class="form-label">Address</label>
-                    <input type="text" id="address" class="form-control" 
-                           formControlName="address" placeholder="Street address">
+                    <input
+                      type="text"
+                      id="address"
+                      class="form-control"
+                      formControlName="address"
+                      placeholder="Street address"
+                    />
                   </div>
                   <div class="col-md-6">
                     <label for="city" class="form-label">City</label>
-                    <input type="text" id="city" class="form-control" 
-                           formControlName="city" placeholder="City">
+                    <input
+                      type="text"
+                      id="city"
+                      class="form-control"
+                      formControlName="city"
+                      placeholder="City"
+                    />
                   </div>
                   <div class="col-md-6">
                     <label for="state" class="form-label">State/Province</label>
-                    <input type="text" id="state" class="form-control" 
-                           formControlName="state" placeholder="State or Province">
+                    <input
+                      type="text"
+                      id="state"
+                      class="form-control"
+                      formControlName="state"
+                      placeholder="State or Province"
+                    />
                   </div>
                   <div class="col-md-6">
                     <label for="country" class="form-label">Country</label>
-                    <input type="text" id="country" class="form-control" 
-                           formControlName="country" placeholder="Country">
+                    <input
+                      type="text"
+                      id="country"
+                      class="form-control"
+                      formControlName="country"
+                      placeholder="Country"
+                    />
                   </div>
                   <div class="col-md-6">
-                    <label for="zipcode" class="form-label">ZIP/Postal Code</label>
-                    <input type="text" id="zipcode" class="form-control" 
-                           formControlName="zipcode" placeholder="ZIP or Postal Code">
+                    <label for="zipcode" class="form-label"
+                      >ZIP/Postal Code</label
+                    >
+                    <input
+                      type="text"
+                      id="zipcode"
+                      class="form-control"
+                      formControlName="zipcode"
+                      placeholder="ZIP or Postal Code"
+                    />
                   </div>
                 </div>
               </div>
+              
+
             </div>
           </div>
 
           <!-- Step 3: Description -->
           <div class="step-content" *ngIf="currentStep === 3">
             <div class="step-header">
-              <h6><i class="bi bi-card-text text-success"></i> Incident Description</h6>
-              <p class="text-muted">Provide a detailed description of what happened. Be as specific as possible.</p>
+              <h6>
+                <i class="bi bi-card-text text-success"></i> Incident
+                Description
+              </h6>
+              <p class="text-muted">
+                Provide a detailed description of what happened. Be as specific
+                as possible.
+              </p>
             </div>
-            
+
             <div class="description-form">
               <label for="description" class="form-label">Description *</label>
-              <textarea id="description" class="form-control" 
-                        formControlName="description" 
-                        rows="6" 
-                        placeholder="Describe the incident in detail. Include what happened, when it occurred, and any other relevant information..."
-                        maxlength="1000"></textarea>
+              <textarea
+                id="description"
+                class="form-control"
+                formControlName="description"
+                rows="6"
+                placeholder="Describe the incident in detail. Include what happened, when it occurred, and any other relevant information..."
+                maxlength="1000"
+              ></textarea>
               <div class="form-text">
                 <span class="character-count">
-                  {{ reportForm.get('description')?.value?.length || 0 }}/1000 characters
+                  {{ reportForm.get("description")?.value?.length || 0 }}/1000
+                  characters
                 </span>
               </div>
-              <div class="invalid-feedback" *ngIf="reportForm.get('description')?.invalid && reportForm.get('description')?.touched">
+              <div
+                class="invalid-feedback"
+                *ngIf="
+                  reportForm.get('description')?.invalid &&
+                  reportForm.get('description')?.touched
+                "
+              >
                 Please provide a description of the incident.
               </div>
             </div>
@@ -528,50 +824,83 @@
           <!-- Step 4: Images -->
           <div class="step-content" *ngIf="currentStep === 4">
             <div class="step-header">
-              <h6><i class="bi bi-images text-warning"></i> Add Photos (Optional)</h6>
-              <p class="text-muted">Upload photos related to the incident. This will help authorities better understand the situation.</p>
+              <h6>
+                <i class="bi bi-images text-warning"></i> Add Photos (Optional)
+              </h6>
+              <p class="text-muted">
+                Upload photos related to the incident. This will help
+                authorities better understand the situation.
+              </p>
             </div>
-            
+
             <div class="image-upload-section">
               <!-- File Upload Area -->
-              <div class="upload-area" 
-                   [class.dragover]="isDragOver"
-                   (dragover)="onDragOver($event)" 
-                   (dragleave)="onDragLeave($event)"
-                   (drop)="onDrop($event)"
-                   (click)="fileInput.click()">
+              <div
+                class="upload-area"
+                [class.dragover]="isDragOver"
+                (dragover)="onDragOver($event)"
+                (dragleave)="onDragLeave($event)"
+                (drop)="onDrop($event)"
+                (click)="fileInput.click()"
+              >
                 <div class="upload-content">
                   <i class="bi bi-cloud-upload upload-icon"></i>
                   <h6>Drop images here or click to browse</h6>
-                  <p class="text-muted">Supported formats: JPG, PNG, GIF (Max 5MB each)</p>
+                  <p class="text-muted">
+                    Supported formats: JPG, PNG, GIF (Max 5MB each)
+                  </p>
                 </div>
-                <input #fileInput type="file" class="d-none" 
-                       multiple accept="image/*" 
-                       (change)="onFileSelect($event)">
+                <input
+                  #fileInput
+                  type="file"
+                  class="d-none"
+                  multiple
+                  accept="image/*"
+                  (change)="onFileSelect($event)"
+                />
               </div>
 
               <!-- Upload Progress -->
-              <div class="upload-progress" *ngIf="uploadProgress > 0 && uploadProgress < 100">
+              <div
+                class="upload-progress"
+                *ngIf="uploadProgress > 0 && uploadProgress < 100"
+              >
                 <div class="progress">
-                  <div class="progress-bar" [style.width.%]="uploadProgress"></div>
+                  <div
+                    class="progress-bar"
+                    [style.width.%]="uploadProgress"
+                  ></div>
                 </div>
-                <span class="progress-text">Uploading... {{ uploadProgress }}%</span>
+                <span class="progress-text"
+                  >Uploading... {{ uploadProgress }}%</span
+                >
               </div>
 
               <!-- Selected Images Preview -->
               <div class="selected-images" *ngIf="selectedImages.length > 0">
-                <h6 class="mb-3">Selected Images ({{ selectedImages.length }})</h6>
+                <h6 class="mb-3">
+                  Selected Images ({{ selectedImages.length }})
+                </h6>
                 <div class="images-grid">
-                  <div class="image-item" *ngFor="let image of selectedImages; let i = index">
+                  <div
+                    class="image-item"
+                    *ngFor="let image of selectedImages; let i = index"
+                  >
                     <div class="image-preview">
-                      <img [src]="image.preview" [alt]="image.file.name">
-                      <button type="button" class="remove-image" (click)="removeImage(i)">
+                      <img [src]="image.preview" [alt]="image.file.name" />
+                      <button
+                        type="button"
+                        class="remove-image"
+                        (click)="removeImage(i)"
+                      >
                         <i class="bi bi-x-circle-fill"></i>
                       </button>
                     </div>
                     <div class="image-info">
                       <span class="image-name">{{ image.file.name }}</span>
-                      <span class="image-size">{{ formatFileSize(image.file.size) }}</span>
+                      <span class="image-size">{{
+                        formatFileSize(image.file.size)
+                      }}</span>
                     </div>
                   </div>
                 </div>
@@ -587,8 +916,9 @@
               </div>
               <h4>Incident Reported Successfully!</h4>
               <p class="success-message">
-                Your incident report has been submitted and is currently under review. 
-                It will be visible on the map once a moderator approves it.
+                Your incident report has been submitted and is currently under
+                review. It will be visible on the map once a moderator approves
+                it.
               </p>
             </div>
           </div>
@@ -597,30 +927,47 @@
 
       <!-- Modal Footer -->
       <div class="modal-footer" *ngIf="currentStep < 5">
-        <button type="button" class="btn btn-outline-secondary" 
-                (click)="previousStep()" 
-                [disabled]="currentStep === 1">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="previousStep()"
+          [disabled]="currentStep === 1"
+        >
           <i class="bi bi-chevron-left"></i> Previous
         </button>
-        <button type="button" class="btn btn-primary" 
-                (click)="nextStep()" 
-                [disabled]="!canProceedToNextStep()"
-                *ngIf="currentStep < 4">
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="nextStep()"
+          [disabled]="!canProceedToNextStep()"
+          *ngIf="currentStep < 4"
+        >
           Next <i class="bi bi-chevron-right"></i>
         </button>
-        <button type="button" class="btn btn-success" 
-                (click)="submitReport()" 
-                [disabled]="isSubmitting || !canSubmitReport()"
-                *ngIf="currentStep === 4">
-          <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
+        <button
+          type="button"
+          class="btn btn-success"
+          (click)="submitReport()"
+          [disabled]="isSubmitting || !canSubmitReport()"
+          *ngIf="currentStep === 4"
+        >
+          <span
+            *ngIf="isSubmitting"
+            class="spinner-border spinner-border-sm me-2"
+          ></span>
           <i class="bi bi-check-circle" *ngIf="!isSubmitting"></i>
-          {{ isSubmitting ? 'Submitting...' : 'Submit Report' }}
+          {{ isSubmitting ? "Submitting..." : "Submit Report" }}
         </button>
       </div>
-      
+
       <!-- Success Footer -->
       <div class="modal-footer" *ngIf="currentStep === 5">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="resetReportForm()">
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-bs-dismiss="modal"
+          (click)="resetReportForm()"
+        >
           <i class="bi bi-check"></i> Close
         </button>
       </div>
