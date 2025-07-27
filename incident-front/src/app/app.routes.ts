@@ -8,12 +8,18 @@ import { AlertParamsComponent } from "./views/alert-params/alert-params.componen
 import { AdminIncidentsComponent } from "./views/admin-incidents/admin-incidents.component"
 import { UserManagementComponent } from "./views/user-management/user-management.component"
 import { UnauthorizedComponent } from "./views/unauthorized/unauthorized.component"
+import { AuthErrorComponent } from "./views/auth-error/auth-error.component"
 
 export const routes: Routes = [
   {
     path: "",
     component: MainMapComponent,
     title: "Incident Reporting System",
+  },
+  {
+    path: "login-error",
+    component: AuthErrorComponent,
+    title: "Authentication Error",
   },
   {
     path: "user-map",

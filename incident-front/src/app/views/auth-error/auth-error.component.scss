@@ -1,0 +1,319 @@
+.auth-error-container {
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.error-backdrop {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 1rem;
+}
+
+.error-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  animation: slideInUp 0.6s ease-out;
+}
+
+.error-header {
+  padding: 3rem 2rem 2rem;
+  text-align: center;
+  position: relative;
+  
+  &.bg-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  }
+  
+  &.bg-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+  }
+  
+  .error-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    
+    i {
+      font-size: 2.5rem;
+      color: white;
+    }
+  }
+  
+  .error-title {
+    margin: 0;
+    color: white;
+    font-size: 2rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.error-body {
+  padding: 2rem;
+  text-align: center;
+  
+  .error-description {
+    font-size: 1.1rem;
+    color: #495057;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.error-details {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid #e9ecef;
+  
+  .detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    .detail-label {
+      font-weight: 600;
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+    
+    .detail-value {
+      font-family: 'Courier New', monospace;
+      background: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid #dee2e6;
+      font-size: 0.85rem;
+      color: #495057;
+    }
+  }
+}
+
+.error-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  
+  .btn {
+    padding: 0.75rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    
+    &.btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-color: transparent;
+      color: white;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+      }
+    }
+    
+    &.btn-outline-secondary {
+      color: #6c757d;
+      border-color: #6c757d;
+      background: transparent;
+      
+      &:hover {
+        background: #6c757d;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+      }
+    }
+  }
+}
+
+.error-footer {
+  background: #f8f9fa;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e9ecef;
+  
+  .help-text {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+    text-align: center;
+    
+    i {
+      color: #17a2b8;
+    }
+  }
+}
+
+// Background Animation
+.bg-animation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.floating-shape {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(73, 116, 195, 0.2); /* Lagani plavi balon */
+  backdrop-filter: blur(10px);
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+
+  &::before {
+    content: "🔒";
+    font-family: "Bootstrap Icons", sans-serif;
+    font-weight: normal;
+    font-size: 2.5rem;
+    color: #dc3545;
+    filter: drop-shadow(0 2px 8px rgba(220, 53, 69, 0.2));
+  }
+
+  &.shape-1 {
+    width: 100px;
+    height: 100px;
+    top: 10%;
+    left: 10%;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  &.shape-2 {
+    width: 60px;
+    height: 60px;
+    top: 20%;
+    right: 15%;
+    animation: float 8s ease-in-out infinite reverse;
+  }
+
+  &.shape-3 {
+    width: 80px;
+    height: 80px;
+    bottom: 15%;
+    left: 20%;
+    animation: float 7s ease-in-out infinite;
+  }
+
+  &.shape-4 {
+    width: 120px;
+    height: 120px;
+    bottom: 10%;
+    right: 10%;
+    animation: float 9s ease-in-out infinite reverse;
+  }
+}
+
+
+// Animations
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .error-card {
+    margin: 1rem;
+    border-radius: 16px;
+  }
+  
+  .error-header {
+    padding: 2rem 1.5rem 1.5rem;
+    
+    .error-title {
+      font-size: 1.5rem;
+    }
+    
+    .error-icon {
+      width: 60px;
+      height: 60px;
+      margin-bottom: 1rem;
+      
+      i {
+        font-size: 2rem;
+      }
+    }
+  }
+  
+  .error-body {
+    padding: 1.5rem;
+    
+    .error-description {
+      font-size: 1rem;
+    }
+  }
+  
+  .error-actions {
+    flex-direction: column;
+    
+    .btn {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+  }
+  
+  .error-details .detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    
+    .detail-value {
+      align-self: stretch;
+      text-align: center;
+    }
+  }
+}

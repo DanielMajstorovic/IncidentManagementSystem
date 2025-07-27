@@ -4,6 +4,7 @@ import eu.reportincident.authservice.client.UserFeignClient;
 import eu.reportincident.authservice.model.dto.UserLoginRequest;
 import eu.reportincident.authservice.model.dto.UserLoginResponse;
 import eu.reportincident.authservice.util.JwtUtil;
+import feign.FeignException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -35,20 +36,39 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         if (email == null || !email.endsWith("@" + allowedDomain)) {
             // Umesto greške, preusmeravamo na frontend sa porukom
             String errorRedirect = UriComponentsBuilder.fromUriString(redirectUrl.replace("login-success", "login-error"))
-                    .queryParam("error", "Invalid domain or email missing.")
+                    .queryParam("error", "invalid_domain")
                     .build().toUriString();
             response.sendRedirect(errorRedirect);
             return;
         }
 
-        UserLoginRequest userLoginRequest = new UserLoginRequest();
-        userLoginRequest.setEmail(email);
-        userLoginRequest.setName(name);
-        UserLoginResponse userLoginResponse = userFeignClient.handleUserLogin(userLoginRequest);
-        String token = jwtUtil.generateToken(userLoginResponse.getUserId(), email, userLoginResponse.getRole(), name);
-        String targetUrl = UriComponentsBuilder.fromUriString(redirectUrl)
-                .queryParam("token", token)
-                .build().toUriString();
-        response.sendRedirect(targetUrl);
+        try {
+
+            UserLoginRequest userLoginRequest = new UserLoginRequest();
+            userLoginRequest.setEmail(email);
+            userLoginRequest.setName(name);
+            UserLoginResponse userLoginResponse = userFeignClient.handleUserLogin(userLoginRequest);
+            String token = jwtUtil.generateToken(userLoginResponse.getUserId(), email, userLoginResponse.getRole(), name);
+            String targetUrl = UriComponentsBuilder.fromUriString(redirectUrl)
+                    .queryParam("token", token)
+                    .build().toUriString();
+            response.sendRedirect(targetUrl);
+
+        } catch (FeignException e) {
+            // Loguj za backend
+            e.printStackTrace(); // Ili koristi logger
+            System.out.println(e.getMessage());
+
+            // Provjeri da li je uzrok blokiran korisnik
+            String errorCode = e.status() == 403 ? "user_blocked" : "login_failed";
+
+            String errorRedirect = UriComponentsBuilder.fromUriString(redirectUrl.replace("login-success", "login-error"))
+                    .queryParam("error", errorCode)
+                    .build().toUriString();
+
+            response.sendRedirect(errorRedirect);
+        }
+
+
     }
 }
