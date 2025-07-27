@@ -21,51 +21,14 @@
     <div class="moderation-stats">
       <div class="stat-item">
         <div class="stat-value">{{ totalIncidents }}</div>
-        <div class="stat-label">Total</div>
-      </div>
-      <div class="stat-item reported">
-        <div class="stat-value">{{ reportedCount }}</div>
-        <div class="stat-label">Reported</div>
-      </div>
-      <div class="stat-item pending">
-        <div class="stat-value">{{ pendingCount }}</div>
-        <div class="stat-label">Pending</div>
+        <div class="stat-label">Incidents</div>
       </div>
     </div>
 
     <div class="filter-content" [class.d-none]="isFilterCollapsed">
-      <!-- QUICK FILTER BUTTONS -->
-      <div class="quick-filters">
-        <h6 class="section-title">
-          <i class="bi bi-lightning-fill"></i> Quick Filters
-        </h6>
-        <div class="quick-filter-grid">
-          <button class="btn btn-outline-warning btn-sm" (click)="showReportedOnly()">
-            <i class="bi bi-exclamation-triangle"></i> Reported Only
-          </button>
-          <button class="btn btn-outline-info btn-sm" (click)="showPendingOnly()">
-            <i class="bi bi-clock"></i> Pending Only
-          </button>
-          <button class="btn btn-outline-secondary btn-sm" (click)="showAllModeration()">
-            <i class="bi bi-list"></i> Show All
-          </button>
-        </div>
-      </div>
-
+      
       <form [formGroup]="filterForm" class="filter-form">
-        <!-- Status Filter -->
-        <div class="form-group">
-          <label for="status" class="form-label">
-            <i class="bi bi-flag-fill text-primary"></i> Status Filter
-          </label>
-          <select id="status" class="form-select" formControlName="status">
-            <option value="">All Statuses</option>
-            <option *ngFor="let status of moderationStatuses" [value]="status.value">
-              {{ status.label }}
-            </option>
-          </select>
-        </div>
-
+        
         <!-- Location Search -->
         <div class="form-group">
           <label for="location" class="form-label">
@@ -153,7 +116,7 @@
     <!-- Enhanced Legend for Moderation -->
     <div class="map-legend">
       <div class="legend-header">
-        <h6><i class="bi bi-list-ul"></i> Moderation Legend</h6>
+        <h6><i class="bi bi-list-ul"></i> Legend</h6>
       </div>
       <div class="legend-items">
         <div *ngFor="let item of legendData" class="legend-item">

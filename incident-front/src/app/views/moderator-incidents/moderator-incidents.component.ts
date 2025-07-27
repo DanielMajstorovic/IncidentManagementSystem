@@ -21,8 +21,6 @@ const iconColorMap: { [key: string]: string } = {
 
 // Special colors for moderation states
 const moderationIconColorMap: { [key: string]: string } = {
-  REPORTED: 'yellow',
-  PENDING: 'violet',
   ...iconColorMap
 };
 
@@ -85,12 +83,6 @@ export class ModeratorIncidentsComponent implements OnInit, OnDestroy {
   };
   currentSubtypes: string[] = [];
 
-  // Moderation specific statuses
-  moderationStatuses = [
-    { value: 'REPORTED', label: 'Reported', color: 'yellow', icon: 'exclamation-triangle' },
-    { value: 'PENDING', label: 'Pending Review', color: 'violet', icon: 'clock' },
-  ];
-
   timeRanges = [
     { value: '1h', label: 'Last Hour', icon: 'clock' },
     { value: '24h', label: 'Last 24H', icon: 'clock-history' },
@@ -100,12 +92,6 @@ export class ModeratorIncidentsComponent implements OnInit, OnDestroy {
 
   // Enhanced legend for moderation
   legendData = [
-    ...this.moderationStatuses.map(status => ({
-      type: status.label,
-      color: status.color,
-      icon: status.icon,
-      status: status.value
-    })),
     ...Object.keys(iconColorMap)
       .filter((key) => key !== 'DEFAULT')
       .map((key) => ({
@@ -401,8 +387,6 @@ export class ModeratorIncidentsComponent implements OnInit, OnDestroy {
         
         // Update counters
         this.totalIncidents = response.content.length;
-        this.reportedCount = response.content.filter(i => i.status === 'REPORTED').length;
-        this.pendingCount = response.content.filter(i => i.status === 'PENDING').length;
 
         response.content.forEach((incident) => {
           const point = L.latLng(
@@ -412,8 +396,7 @@ export class ModeratorIncidentsComponent implements OnInit, OnDestroy {
           markerPoints.push(point);
 
           // Use moderation colors for pending incidents
-          const color = moderationIconColorMap[incident.status] || 
-                       moderationIconColorMap[incident.type] || 
+          const color = moderationIconColorMap[incident.type] || 
                        moderationIconColorMap['DEFAULT'];
           
           const icon = createColoredIcon(color);
@@ -520,19 +503,6 @@ export class ModeratorIncidentsComponent implements OnInit, OnDestroy {
       this.map.setView(latLng, 15);
       this.incidentModal?.hide();
     }
-  }
-
-  // Quick filter methods for moderation
-  showReportedOnly(): void {
-    this.filterForm.patchValue({ status: 'REPORTED' });
-  }
-
-  showPendingOnly(): void {
-    this.filterForm.patchValue({ status: 'PENDING' });
-  }
-
-  showAllModeration(): void {
-    this.filterForm.patchValue({ status: '' });
   }
 
   // Toast notification system (you might want to implement a proper toast service)
