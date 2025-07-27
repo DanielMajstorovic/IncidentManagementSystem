@@ -4,15 +4,27 @@
     <div class="filter-header">
       <div class="filter-title">
         <h4><i class="bi bi-shield-check"></i> Moderation Panel</h4>
-        <span class="filter-badge" *ngIf="activeFiltersCount > 0">{{ activeFiltersCount }}</span>
+        <span class="filter-badge" *ngIf="activeFiltersCount > 0">{{
+          activeFiltersCount
+        }}</span>
       </div>
       <div class="filter-actions">
-        <button class="btn btn-sm btn-outline-secondary me-2" (click)="resetFilters()"
-                 [disabled]="activeFiltersCount === 0">
+        <button
+          class="btn btn-sm btn-outline-secondary me-2"
+          (click)="resetFilters()"
+          [disabled]="activeFiltersCount === 0"
+        >
           <i class="bi bi-arrow-clockwise"></i> Reset
         </button>
-        <button class="btn btn-sm btn-outline-primary d-lg-none" (click)="toggleFilterPanel()">
-          <i class="bi" [class.bi-chevron-left]="!isFilterCollapsed" [class.bi-chevron-right]="isFilterCollapsed"></i>
+        <button
+          class="btn btn-sm btn-outline-primary d-lg-none"
+          (click)="toggleFilterPanel()"
+        >
+          <i
+            class="bi"
+            [class.bi-chevron-left]="!isFilterCollapsed"
+            [class.bi-chevron-right]="isFilterCollapsed"
+          ></i>
         </button>
       </div>
     </div>
@@ -26,9 +38,7 @@
     </div>
 
     <div class="filter-content" [class.d-none]="isFilterCollapsed">
-      
       <form [formGroup]="filterForm" class="filter-form">
-        
         <!-- Location Search -->
         <div class="form-group">
           <label for="location" class="form-label">
@@ -36,9 +46,13 @@
           </label>
           <div class="input-group">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input type="text" id="location" class="form-control"
-                    formControlName="location"
-                    placeholder="e.g., Banja Luka">
+            <input
+              type="text"
+              id="location"
+              class="form-control"
+              formControlName="location"
+              placeholder="e.g., Banja Luka"
+            />
           </div>
         </div>
 
@@ -47,10 +61,15 @@
           <label for="type" class="form-label">
             <i class="bi bi-tags-fill text-warning"></i> Incident Type
           </label>
-          <select id="type" class="form-select" formControlName="incidentType" (change)="onTypeChange()">
+          <select
+            id="type"
+            class="form-select"
+            formControlName="incidentType"
+            (change)="onTypeChange()"
+          >
             <option value="">All Types</option>
             <option *ngFor="let type of incidentTypes" [value]="type">
-              {{ type | titlecase | replace: '_':' ' }}
+              {{ type | titlecase | replace : "_" : " " }}
             </option>
           </select>
         </div>
@@ -60,12 +79,15 @@
           <label for="subtype" class="form-label">
             <i class="bi bi-tag-fill text-info"></i> Incident Subtype
           </label>
-          <select id="subtype" class="form-select"
-                   formControlName="incidentSubtype"
-                   [disabled]="!filterForm.get('incidentType')?.value">
+          <select
+            id="subtype"
+            class="form-select"
+            formControlName="incidentSubtype"
+            [disabled]="!filterForm.get('incidentType')?.value"
+          >
             <option value="">All Subtypes</option>
             <option *ngFor="let subtype of currentSubtypes" [value]="subtype">
-              {{ subtype | titlecase | replace: '_':' ' }}
+              {{ subtype | titlecase | replace : "_" : " " }}
             </option>
           </select>
         </div>
@@ -76,17 +98,33 @@
             <i class="bi bi-clock-fill text-success"></i> Time Range
           </label>
           <div class="time-range-grid">
-            <input type="radio" class="btn-check" formControlName="timeRange"
-                    id="timeAll" value="" autocomplete="off">
+            <input
+              type="radio"
+              class="btn-check"
+              formControlName="timeRange"
+              id="timeAll"
+              value=""
+              autocomplete="off"
+            />
             <label class="btn btn-outline-primary time-btn" for="timeAll">
               <i class="bi bi-infinity"></i> All Time
             </label>
-            
+
             <ng-container *ngFor="let range of timeRanges">
-              <input type="radio" class="btn-check" formControlName="timeRange"
-                      [id]="'time' + range.value" [value]="range.value" autocomplete="off">
-              <label class="btn btn-outline-primary time-btn" [for]="'time' + range.value">
-                <i class="bi" [class]="'bi-' + range.icon"></i> {{ range.label }}
+              <input
+                type="radio"
+                class="btn-check"
+                formControlName="timeRange"
+                [id]="'time' + range.value"
+                [value]="range.value"
+                autocomplete="off"
+              />
+              <label
+                class="btn btn-outline-primary time-btn"
+                [for]="'time' + range.value"
+              >
+                <i class="bi" [class]="'bi-' + range.icon"></i>
+                {{ range.label }}
               </label>
             </ng-container>
           </div>
@@ -106,12 +144,13 @@
     </div>
 
     <!-- Map Frame -->
-    <div class="map-frame"
-         leaflet
-         [leafletOptions]="mapOptions"
-         [leafletLayers]="incidentLayers"
-         (leafletMapReady)="onMapReady($event)">
-    </div>
+    <div
+      class="map-frame"
+      leaflet
+      [leafletOptions]="mapOptions"
+      [leafletLayers]="incidentLayers"
+      (leafletMapReady)="onMapReady($event)"
+    ></div>
 
     <!-- Enhanced Legend for Moderation -->
     <div class="map-legend">
@@ -120,10 +159,16 @@
       </div>
       <div class="legend-items">
         <div *ngFor="let item of legendData" class="legend-item">
-          <img [src]="'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-' + item.color + '.png'"
-                class="legend-icon" [alt]="item.type">
+          <img
+            [src]="
+              'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-' +
+              item.color +
+              '.png'
+            "
+            class="legend-icon"
+            [alt]="item.type"
+          />
           <span class="legend-text">
-            <i class="bi" [class]="'bi-' + item.icon"></i>
             {{ item.type | titlecase }}
           </span>
         </div>
@@ -131,41 +176,66 @@
     </div>
 
     <!-- Mobile Filter Toggle -->
-    <button class="mobile-filter-toggle d-lg-none" (click)="toggleFilterPanel()">
+    <button
+      class="mobile-filter-toggle d-lg-none"
+      (click)="toggleFilterPanel()"
+    >
       <i class="bi bi-shield-check"></i>
-      <span class="filter-count" *ngIf="activeFiltersCount > 0">{{ activeFiltersCount }}</span>
+      <span class="filter-count" *ngIf="activeFiltersCount > 0">{{
+        activeFiltersCount
+      }}</span>
     </button>
   </div>
 </div>
 
 <!-- ENHANCED MODERATION MODAL -->
-<div class="modal fade" id="moderatorIncidentModal" tabindex="-1"
-      aria-labelledby="moderatorIncidentModalLabel" aria-hidden="true">
+<div
+  class="modal fade"
+  id="moderatorIncidentModal"
+  tabindex="-1"
+  aria-labelledby="moderatorIncidentModalLabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog modal-xl modal-dialog-centered">
-    <div class="modal-content moderation-modal" *ngIf="currentModalState.incident">
-      
+    <div
+      class="modal-content moderation-modal"
+      *ngIf="currentModalState.incident"
+    >
       <!-- Modal Header with Status -->
       <div class="modal-header">
         <div class="modal-title-container">
           <h5 class="modal-title" id="moderatorIncidentModalLabel">
             <i class="bi bi-shield-exclamation me-2"></i>
-            <span class="incident-type">{{ currentModalState.incident.type | titlecase | replace: '_':' ' }}</span>
-            <span class="incident-subtype">{{ currentModalState.incident.subtype | titlecase | replace: '_':' ' }}</span>
+            <span class="incident-type">{{
+              currentModalState.incident.type | titlecase | replace : "_" : " "
+            }}</span>
+            <span class="incident-subtype">{{
+              currentModalState.incident.subtype
+                | titlecase
+                | replace : "_" : " "
+            }}</span>
           </h5>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
       </div>
 
       <!-- Modal Body -->
       <div class="modal-body">
         <div class="row g-4">
-          
           <!-- Images Section -->
           <div class="col-lg-7">
             <div class="images-section">
               <h6 class="section-title">
                 <i class="bi bi-images"></i> Evidence Photos
-                <span class="image-count" *ngIf="currentModalState.imageUrls.length > 0">
+                <span
+                  class="image-count"
+                  *ngIf="currentModalState.imageUrls.length > 0"
+                >
                   ({{ currentModalState.imageUrls.length }})
                 </span>
               </h6>
@@ -175,17 +245,26 @@
                 <div class="skeleton-loader">
                   <div class="skeleton-image"></div>
                   <div class="skeleton-thumbnails">
-                    <div class="skeleton-thumb" *ngFor="let i of [1,2,3]"></div>
+                    <div
+                      class="skeleton-thumb"
+                      *ngFor="let i of [1, 2, 3]"
+                    ></div>
                   </div>
                 </div>
                 <div class="loading-text">
-                  <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                  <div
+                    class="spinner-border spinner-border-sm text-primary"
+                    role="status"
+                  ></div>
                   <span class="ms-2">Loading evidence...</span>
                 </div>
               </div>
 
               <!-- Error State -->
-              <div *ngIf="currentModalState.error && !currentModalState.isLoading" class="image-error">
+              <div
+                *ngIf="currentModalState.error && !currentModalState.isLoading"
+                class="image-error"
+              >
                 <div class="alert alert-warning">
                   <i class="bi bi-exclamation-triangle"></i>
                   {{ currentModalState.error }}
@@ -193,40 +272,71 @@
               </div>
 
               <!-- Images Content -->
-              <div *ngIf="!currentModalState.isLoading && !currentModalState.error">
-                <div *ngIf="currentModalState.imageUrls.length > 0; else noPhotos" class="image-gallery">
-                  
+              <div
+                *ngIf="!currentModalState.isLoading && !currentModalState.error"
+              >
+                <div
+                  *ngIf="currentModalState.imageUrls.length > 0; else noPhotos"
+                  class="image-gallery"
+                >
                   <!-- Main Image -->
                   <div class="main-image-container">
-                    <img [src]="currentModalState.imageUrls[currentModalState.currentImageIndex]"
-                          class="main-image"
-                          alt="Evidence Photo"
-                         (error)="onImageError($event)">
-                    
+                    <img
+                      [src]="
+                        currentModalState.imageUrls[
+                          currentModalState.currentImageIndex
+                        ]
+                      "
+                      class="main-image"
+                      alt="Evidence Photo"
+                      (error)="onImageError($event)"
+                    />
+
                     <!-- Navigation Arrows -->
-                    <button class="image-nav prev" (click)="previousImage()"
-                             *ngIf="currentModalState.imageUrls.length > 1">
+                    <button
+                      class="image-nav prev"
+                      (click)="previousImage()"
+                      *ngIf="currentModalState.imageUrls.length > 1"
+                    >
                       <i class="bi bi-chevron-left"></i>
                     </button>
-                    <button class="image-nav next" (click)="nextImage()"
-                             *ngIf="currentModalState.imageUrls.length > 1">
+                    <button
+                      class="image-nav next"
+                      (click)="nextImage()"
+                      *ngIf="currentModalState.imageUrls.length > 1"
+                    >
                       <i class="bi bi-chevron-right"></i>
                     </button>
 
                     <!-- Image Counter -->
-                    <div class="image-counter" *ngIf="currentModalState.imageUrls.length > 1">
-                      {{ currentModalState.currentImageIndex + 1 }} / {{ currentModalState.imageUrls.length }}
+                    <div
+                      class="image-counter"
+                      *ngIf="currentModalState.imageUrls.length > 1"
+                    >
+                      {{ currentModalState.currentImageIndex + 1 }} /
+                      {{ currentModalState.imageUrls.length }}
                     </div>
                   </div>
 
                   <!-- Thumbnails -->
-                  <div class="thumbnails" *ngIf="currentModalState.imageUrls.length > 1">
-                    <button *ngFor="let url of currentModalState.imageUrls; let i = index"
-                            class="thumbnail"
-                            [class.active]="i === currentModalState.currentImageIndex"
-                            (click)="goToImage(i)">
-                      <img [src]="url" [alt]="'Thumbnail ' + (i + 1)"
-                           (error)="onImageError($event)">
+                  <div
+                    class="thumbnails"
+                    *ngIf="currentModalState.imageUrls.length > 1"
+                  >
+                    <button
+                      *ngFor="
+                        let url of currentModalState.imageUrls;
+                        let i = index
+                      "
+                      class="thumbnail"
+                      [class.active]="i === currentModalState.currentImageIndex"
+                      (click)="goToImage(i)"
+                    >
+                      <img
+                        [src]="url"
+                        [alt]="'Thumbnail ' + (i + 1)"
+                        (error)="onImageError($event)"
+                      />
                     </button>
                   </div>
                 </div>
@@ -237,7 +347,9 @@
                     <div class="no-photos-icon">
                       <i class="bi bi-image-alt"></i>
                     </div>
-                    <p class="no-photos-text">No evidence photos were provided for this incident.</p>
+                    <p class="no-photos-text">
+                      No evidence photos were provided for this incident.
+                    </p>
                   </div>
                 </ng-template>
               </div>
@@ -253,13 +365,79 @@
 
               <div class="info-cards">
                 <!-- Description Card -->
+                <!-- Description Card with Translation -->
                 <div class="info-card">
                   <div class="info-card-header">
                     <i class="bi bi-card-text text-primary"></i>
                     <span>Incident Description</span>
                   </div>
                   <div class="info-card-body">
-                    <p class="description-text">{{ currentModalState.incident.description }}</p>
+                    <!-- 1. Ovaj paragraf sada dinamički prikazuje ili original ili prevod -->
+                    <p class="description-text">
+                      {{
+                        currentModalState.isTranslated
+                          ? currentModalState.translation?.translatedText
+                          : currentModalState.incident.description
+                      }}
+                    </p>
+
+                    <!-- 2. Ovaj blok prikazuje kontrole za prevođenje -->
+                    <div
+                      *ngIf="
+                        currentModalState.translation ||
+                        currentModalState.isTranslating
+                      "
+                      class="translation-controls"
+                    >
+                      <!-- Prikazuje detektovani jezik -->
+                      <span
+                        class="lang-info"
+                        *ngIf="currentModalState.translation"
+                      >
+                        Detected:
+                        <strong>{{
+                          currentModalState.translation.detectedLanguage
+                            | uppercase
+                        }}</strong>
+                      </span>
+
+                      <!-- Dugme koje pokreće prevođenje -->
+                      <button
+                        class="btn btn-sm btn-outline-primary translate-btn"
+                        (click)="toggleTranslation()"
+                        [disabled]="
+                          currentModalState.isTranslating ||
+                          !currentModalState.translation
+                        "
+                      >
+                        <!-- Prikazuje spinner dok se prevod učitava -->
+                        <span
+                          *ngIf="currentModalState.isTranslating"
+                          class="spinner-border spinner-border-sm"
+                          role="status"
+                        ></span>
+
+                        <!-- Prikazuje tekst na dugmetu u zavisnosti od stanja -->
+                        <span
+                          *ngIf="
+                            !currentModalState.isTranslating &&
+                            currentModalState.translation
+                          "
+                        >
+                          <i class="bi bi-translate"></i>
+                          <ng-container *ngIf="!currentModalState.isTranslated">
+                            Translate to
+                            {{
+                              currentModalState.translation.targetLanguage
+                                | uppercase
+                            }}
+                          </ng-container>
+                          <ng-container *ngIf="currentModalState.isTranslated">
+                            Show Original
+                          </ng-container>
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -271,7 +449,15 @@
                   </div>
                   <div class="info-card-body">
                     <!-- Full Address Display -->
-                    <div class="location-address" *ngIf="getFormattedAddress(currentModalState.incident.location); let address">
+                    <div
+                      class="location-address"
+                      *ngIf="
+                        getFormattedAddress(
+                          currentModalState.incident.location
+                        );
+                        let address
+                      "
+                    >
                       <div class="address-main">
                         <i class="bi bi-geo"></i>
                         <span class="address-text">{{ address }}</span>
@@ -287,17 +473,31 @@
                       <div class="coordinates-grid">
                         <div class="coordinate-item">
                           <span class="coord-label">Latitude</span>
-                          <span class="coord-value">{{ currentModalState.incident.location.latitude | number:'1.6-6' }}°</span>
+                          <span class="coord-value"
+                            >{{
+                              currentModalState.incident.location.latitude
+                                | number : "1.6-6"
+                            }}°</span
+                          >
                         </div>
                         <div class="coordinate-item">
                           <span class="coord-label">Longitude</span>
-                          <span class="coord-value">{{ currentModalState.incident.location.longitude | number:'1.6-6' }}°</span>
+                          <span class="coord-value"
+                            >{{
+                              currentModalState.incident.location.longitude
+                                | number : "1.6-6"
+                            }}°</span
+                          >
                         </div>
                       </div>
 
                       <!-- Copy Coordinates Button -->
-                      <button class="btn btn-sm btn-outline-primary copy-coords-btn"
-                               (click)="copyCoordinates(currentModalState.incident.location)">
+                      <button
+                        class="btn btn-sm btn-outline-primary copy-coords-btn"
+                        (click)="
+                          copyCoordinates(currentModalState.incident.location)
+                        "
+                      >
                         <i class="bi bi-clipboard"></i>
                         Copy Coordinates
                       </button>
@@ -305,11 +505,23 @@
 
                     <!-- Location Actions -->
                     <div class="location-actions">
-                      <button class="btn btn-primary btn-sm" (click)="openInMaps(currentModalState.incident.location)">
+                      <button
+                        class="btn btn-primary btn-sm"
+                        (click)="
+                          openInMaps(currentModalState.incident.location)
+                        "
+                      >
                         <i class="bi bi-map"></i>
                         View in Maps
                       </button>
-                      <button class="btn btn-outline-secondary btn-sm" (click)="centerMapOnLocation(currentModalState.incident.location)">
+                      <button
+                        class="btn btn-outline-secondary btn-sm"
+                        (click)="
+                          centerMapOnLocation(
+                            currentModalState.incident.location
+                          )
+                        "
+                      >
                         <i class="bi bi-crosshair2"></i>
                         Center on Map
                       </button>
@@ -326,17 +538,26 @@
                   <div class="info-card-body">
                     <div class="timeline-item">
                       <span class="timeline-label">Reported:</span>
-                      <span class="timeline-value">{{ currentModalState.incident.reportedAt | date:'medium' }}</span>
+                      <span class="timeline-value">{{
+                        currentModalState.incident.reportedAt | date : "medium"
+                      }}</span>
                     </div>
                     <div class="timeline-item">
                       <span class="timeline-label">Current Status:</span>
-                      <span class="badge" [class]="getStatusBadgeClass(currentModalState.incident.status)">
+                      <span
+                        class="badge"
+                        [class]="
+                          getStatusBadgeClass(currentModalState.incident.status)
+                        "
+                      >
                         {{ currentModalState.incident.status }}
                       </span>
                     </div>
                     <div class="timeline-item">
                       <span class="timeline-label">Incident ID:</span>
-                      <span class="timeline-value incident-id">#{{ currentModalState.incident.id }}</span>
+                      <span class="timeline-value incident-id"
+                        >#{{ currentModalState.incident.id }}</span
+                      >
                     </div>
                   </div>
                 </div>
@@ -351,36 +572,43 @@
         <div class="moderation-actions">
           <!-- Processing State -->
           <div *ngIf="currentModalState.isProcessing" class="processing-state">
-            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+            <div
+              class="spinner-border spinner-border-sm text-primary me-2"
+              role="status"
+            ></div>
             <span>Processing...</span>
           </div>
 
           <!-- Action Buttons -->
           <div *ngIf="!currentModalState.isProcessing" class="action-buttons">
-            
-            <button type="button" 
-                    class="btn btn-danger me-2" 
-                    (click)="rejectIncident()"
-                    [disabled]="currentModalState.isProcessing">
+            <button
+              type="button"
+              class="btn btn-danger me-2"
+              (click)="rejectIncident()"
+              [disabled]="currentModalState.isProcessing"
+            >
               <i class="bi bi-x-octagon"></i>
               Reject Incident
             </button>
-            
-            <button type="button" 
-                    class="btn btn-success" 
-                    (click)="approveIncident()"
-                    [disabled]="currentModalState.isProcessing">
+
+            <button
+              type="button"
+              class="btn btn-success"
+              (click)="approveIncident()"
+              [disabled]="currentModalState.isProcessing"
+            >
               <i class="bi bi-check-circle"></i>
               Approve Incident
             </button>
           </div>
         </div>
-        
+
         <!-- Footer Info -->
         <div class="footer-info">
           <small class="text-muted">
             <i class="bi bi-info-circle"></i>
-            Review all evidence carefully before making a decision. Actions cannot be undone.
+            Review all evidence carefully before making a decision. Actions
+            cannot be undone.
           </small>
         </div>
       </div>

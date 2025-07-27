@@ -2,12 +2,15 @@ package eu.reportincident.incident_service.controller;
 
 import eu.reportincident.incident_service.model.dto.FileUploadResponse;
 import eu.reportincident.incident_service.model.dto.Incident;
+import eu.reportincident.incident_service.model.dto.TranslationResponse;
 import eu.reportincident.incident_service.model.enums.IncidentStatus;
 import eu.reportincident.incident_service.model.request.FilterRequest;
 import eu.reportincident.incident_service.model.request.IncidentRequest;
 import eu.reportincident.incident_service.model.request.IncidentStatusUpdateRequest;
+import eu.reportincident.incident_service.model.request.TranslationRequest;
 import eu.reportincident.incident_service.service.IncidentService;
 import eu.reportincident.incident_service.service.S3Service;
+import eu.reportincident.incident_service.service.TranslationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -31,11 +34,13 @@ public class IncidentController {
 
     private final IncidentService incidentService;
     private final S3Service s3Service;
+    private final TranslationService translationService;
 
     @Autowired
-    public IncidentController(IncidentService incidentService, S3Service s3Service) {
+    public IncidentController(IncidentService incidentService, S3Service s3Service, TranslationService translationService) {
         this.incidentService = incidentService;
         this.s3Service = s3Service;
+        this.translationService = translationService;
     }
 
     @GetMapping
@@ -99,5 +104,20 @@ public class IncidentController {
         Incident updatedIncident = incidentService.updateStatus(id, status);
         return ResponseEntity.ok(updatedIncident);
     }
+
+
+
+    @PostMapping("/translate") // NOVI ENDPOINT
+    public ResponseEntity<TranslationResponse> translate(@RequestBody @Valid TranslationRequest request) {
+        String originalText = request.getText();
+        String detectedLang = translationService.detectLanguage(originalText);
+
+        String targetLang = detectedLang.equals("en") ? "sr" : "en";
+        String translatedText = translationService.translateText(originalText, targetLang);
+
+        TranslationResponse response = new TranslationResponse(originalText, translatedText, detectedLang, targetLang);
+        return ResponseEntity.ok(response);
+    }
+
 
 }

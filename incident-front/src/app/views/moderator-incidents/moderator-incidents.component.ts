@@ -8,6 +8,10 @@ import { debounceTime, takeUntil, finalize } from 'rxjs/operators';
 import { IncidentService } from '../../core/services/incident.service';
 import { FilterRequest, Incident } from '../../core/models/incident.model';
 import { ReplacePipe } from '../../core/pipes/replace.pipe';
+import {
+  TranslationResponse,
+  TranslationService,
+} from '../../core/services/translation.service';
 
 declare var bootstrap: any;
 
@@ -21,13 +25,14 @@ const iconColorMap: { [key: string]: string } = {
 
 // Special colors for moderation states
 const moderationIconColorMap: { [key: string]: string } = {
-  ...iconColorMap
+  ...iconColorMap,
 };
 
 const createColoredIcon = (color: string): L.Icon => {
   return L.icon({
     iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    shadowUrl:
+      'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
@@ -43,6 +48,9 @@ interface ModalState {
   currentImageIndex: number;
   error: string | null;
   isProcessing: boolean;
+  translation: TranslationResponse | null;
+  isTranslated: boolean;
+  isTranslating: boolean;
 }
 
 @Component({
@@ -98,10 +106,9 @@ export class ModeratorIncidentsComponent implements OnInit, OnDestroy {
         type: key,
         color: iconColorMap[key],
         icon: this.getTypeIcon(key),
-      }))
+      })),
   ];
 
-  // Enhanced modal state for moderation
   private modalStateSubject = new BehaviorSubject<ModalState>({
     isOpen: false,
     isLoading: false,
@@ -110,6 +117,9 @@ export class ModeratorIncidentsComponent implements OnInit, OnDestroy {
     currentImageIndex: 0,
     error: null,
     isProcessing: false,
+    translation: null,
+    isTranslated: false,
+    isTranslating: false,
   });
 
   public modalState$ = this.modalStateSubject.asObservable();
@@ -129,7 +139,8 @@ export class ModeratorIncidentsComponent implements OnInit, OnDestroy {
   constructor(
     private incidentService: IncidentService,
     private fb: FormBuilder,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private translationService: TranslationService
   ) {
     this.filterForm = this.fb.group({
       incidentType: [''],
@@ -160,10 +171,7 @@ export class ModeratorIncidentsComponent implements OnInit, OnDestroy {
 
   private setupFormSubscription(): void {
     this.filterForm.valueChanges
-      .pipe(
-        debounceTime(200),
-        takeUntil(this.destroy$)
-      )
+      .pipe(debounceTime(200), takeUntil(this.destroy$))
       .subscribe(() => {
         this.loadIncidents();
         this.updateActiveFiltersCount();
@@ -208,56 +216,57 @@ export class ModeratorIncidentsComponent implements OnInit, OnDestroy {
     this.isFilterCollapsed = !this.isFilterCollapsed;
   }
 
+  toggleTranslation(): void {
+    this.updateModalState({
+      isTranslated: !this.currentModalState.isTranslated,
+    });
+  }
+
   // Enhanced modal opening for moderation
   openIncidentModal(incident: Incident): void {
+    // 1. Resetujemo stanje modala, uključujući nova svojstva za prevođenje
     this.updateModalState({
       isOpen: true,
-      isLoading: true,
+      isLoading: true, // Glavni loading za slike
       incident: incident,
       imageUrls: [],
       currentImageIndex: 0,
       error: null,
       isProcessing: false,
+      // Resetovanje prevoda
+      translation: null,
+      isTranslated: false,
+      isTranslating: true, // Odmah postavljamo da se prevod učitava
     });
 
     this.incidentModal?.show();
 
-    // Preload images
+    // 2. Učitavamo slike (ova logika ostaje ista)
     if (incident.images && incident.images.length > 0) {
       const imageFilenames = incident.images.map((img) => img.imageUrl);
       this.incidentService
         .preloadImages(imageFilenames)
-        .pipe(
-          finalize(() => {
-            this.updateModalState({
-              ...this.currentModalState,
-              isLoading: false,
-            });
-          })
-        )
+        .pipe(finalize(() => this.updateModalState({ isLoading: false })))
         .subscribe({
-          next: (urls) => {
-            this.updateModalState({
-              ...this.currentModalState,
-              imageUrls: urls,
-              isLoading: false,
-            });
-          },
+          next: (urls) => this.updateModalState({ imageUrls: urls }),
           error: (error) => {
-            console.error('Failed to load images:', error);
-            this.updateModalState({
-              ...this.currentModalState,
-              isLoading: false,
-              error: 'Failed to load images',
-            });
+            this.updateModalState({ error: 'Failed to load evidence' });
           },
         });
     } else {
-      this.updateModalState({
-        ...this.currentModalState,
-        isLoading: false,
-      });
+      this.updateModalState({ isLoading: false });
     }
+
+    // 3. --- DODAJEMO NOVU LOGIKU --- Pozivamo servis za prevođenje
+    this.translationService
+      .getTranslation(incident.description)
+      .pipe(finalize(() => this.updateModalState({ isTranslating: false }))) // Uvijek isključi loading
+      .subscribe((translationResponse) => {
+        // Ako je odgovor uspješan, sačuvaj ga u stanje
+        if (translationResponse) {
+          this.updateModalState({ translation: translationResponse });
+        }
+      });
   }
 
   private updateModalState(newState: Partial<ModalState>): void {
@@ -307,27 +316,29 @@ export class ModeratorIncidentsComponent implements OnInit, OnDestroy {
     });
 
     const incidentId = this.currentModalState.incident.id;
-    this.incidentService.updateIncidentStatus(incidentId, 'APPROVED').subscribe({
-      next: (updatedIncident) => {
-        console.log('Incident approved successfully');
-        this.updateModalState({
-          ...this.currentModalState,
-          isProcessing: false,
-        });
-        this.incidentModal?.hide();
-        this.loadIncidents(); // Refresh the map
-        this.showToast('Incident approved successfully', 'success');
-      },
-      error: (error) => {
-        console.error('Failed to approve incident:', error);
-        this.updateModalState({
-          ...this.currentModalState,
-          isProcessing: false,
-          error: 'Failed to approve incident',
-        });
-        this.showToast('Failed to approve incident', 'error');
-      },
-    });
+    this.incidentService
+      .updateIncidentStatus(incidentId, 'APPROVED')
+      .subscribe({
+        next: (updatedIncident) => {
+          console.log('Incident approved successfully');
+          this.updateModalState({
+            ...this.currentModalState,
+            isProcessing: false,
+          });
+          this.incidentModal?.hide();
+          this.loadIncidents(); // Refresh the map
+          this.showToast('Incident approved successfully', 'success');
+        },
+        error: (error) => {
+          console.error('Failed to approve incident:', error);
+          this.updateModalState({
+            ...this.currentModalState,
+            isProcessing: false,
+            error: 'Failed to approve incident',
+          });
+          this.showToast('Failed to approve incident', 'error');
+        },
+      });
   }
 
   rejectIncident(): void {
@@ -339,27 +350,29 @@ export class ModeratorIncidentsComponent implements OnInit, OnDestroy {
     });
 
     const incidentId = this.currentModalState.incident.id;
-    this.incidentService.updateIncidentStatus(incidentId, 'REJECTED').subscribe({
-      next: (updatedIncident) => {
-        console.log('Incident rejected successfully');
-        this.updateModalState({
-          ...this.currentModalState,
-          isProcessing: false,
-        });
-        this.incidentModal?.hide();
-        this.loadIncidents(); // Refresh the map
-        this.showToast('Incident rejected', 'warning');
-      },
-      error: (error) => {
-        console.error('Failed to reject incident:', error);
-        this.updateModalState({
-          ...this.currentModalState,
-          isProcessing: false,
-          error: 'Failed to reject incident',
-        });
-        this.showToast('Failed to reject incident', 'error');
-      },
-    });
+    this.incidentService
+      .updateIncidentStatus(incidentId, 'REJECTED')
+      .subscribe({
+        next: (updatedIncident) => {
+          console.log('Incident rejected successfully');
+          this.updateModalState({
+            ...this.currentModalState,
+            isProcessing: false,
+          });
+          this.incidentModal?.hide();
+          this.loadIncidents(); // Refresh the map
+          this.showToast('Incident rejected', 'warning');
+        },
+        error: (error) => {
+          console.error('Failed to reject incident:', error);
+          this.updateModalState({
+            ...this.currentModalState,
+            isProcessing: false,
+            error: 'Failed to reject incident',
+          });
+          this.showToast('Failed to reject incident', 'error');
+        },
+      });
   }
 
   private loadIncidents(): void {
@@ -384,7 +397,7 @@ export class ModeratorIncidentsComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.incidentLayers = [];
         const markerPoints: L.LatLng[] = [];
-        
+
         // Update counters
         this.totalIncidents = response.content.length;
 
@@ -396,17 +409,24 @@ export class ModeratorIncidentsComponent implements OnInit, OnDestroy {
           markerPoints.push(point);
 
           // Use moderation colors for pending incidents
-          const color = moderationIconColorMap[incident.type] || 
-                       moderationIconColorMap['DEFAULT'];
-          
+          const color =
+            moderationIconColorMap[incident.type] ||
+            moderationIconColorMap['DEFAULT'];
+
           const icon = createColoredIcon(color);
           const marker = L.marker(point, { icon });
+
+          const maxLength = 50; // ili koliko već želiš
+          const shortDescription =
+            incident.description.length > maxLength
+              ? incident.description.substring(0, maxLength) + '...'
+              : incident.description;
 
           // Enhanced tooltip for moderation
           marker.on('mouseover', () => {
             marker
               .bindTooltip(
-                `${incident.status} - ${incident.type}: ${incident.description}`,
+                `${incident.status} - ${incident.type}: ${shortDescription}`,
                 {
                   permanent: false,
                   direction: 'bottom',
@@ -444,6 +464,9 @@ export class ModeratorIncidentsComponent implements OnInit, OnDestroy {
           currentImageIndex: 0,
           error: null,
           isProcessing: false,
+          translation: null,
+          isTranslated: false,
+          isTranslating: false,
         });
       });
     }
@@ -506,7 +529,10 @@ export class ModeratorIncidentsComponent implements OnInit, OnDestroy {
   }
 
   // Toast notification system (you might want to implement a proper toast service)
-  private showToast(message: string, type: 'success' | 'error' | 'warning'): void {
+  private showToast(
+    message: string,
+    type: 'success' | 'error' | 'warning'
+  ): void {
     // Simple console log for now - implement proper toast notifications
     console.log(`${type.toUpperCase()}: ${message}`);
     // You can implement a proper toast service here

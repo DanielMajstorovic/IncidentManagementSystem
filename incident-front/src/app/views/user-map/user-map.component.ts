@@ -828,9 +828,15 @@ export class UserMapComponent implements OnInit, OnDestroy {
           const icon = createColoredIcon(color);
           const marker = L.marker(point, { icon });
 
+          const maxLength = 50; // ili koliko već želiš
+          const shortDescription =
+            incident.description.length > maxLength
+              ? incident.description.substring(0, maxLength) + '...'
+              : incident.description;
+
           marker.on('mouseover', () => {
             marker
-              .bindTooltip(`${incident.type}: ${incident.description}`, {
+              .bindTooltip(`${incident.type}: ${shortDescription}`, {
                 permanent: false,
                 direction: 'bottom',
               })

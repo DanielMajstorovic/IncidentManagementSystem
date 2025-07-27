@@ -317,11 +317,17 @@ export class MainMapComponent implements OnInit, OnDestroy {
           const icon = createColoredIcon(color);
           const marker = L.marker(point, { icon });
 
+          const maxLength = 50; // ili koliko već želiš
+          const shortDescription =
+            incident.description.length > maxLength
+              ? incident.description.substring(0, maxLength) + '...'
+              : incident.description;
+
           // Dodaj hover efekat
           marker.on('mouseover', () => {
             marker
               .bindTooltip(
-                `${incident.type}: ${incident.description}`,
+                `${incident.type}: ${shortDescription}`,
                 {
                   permanent: false,
                   direction: 'bottom',
