@@ -9,6 +9,10 @@ import { debounceTime, takeUntil, finalize } from 'rxjs/operators';
 import { IncidentService } from '../../core/services/incident.service';
 import { FilterRequest, Incident } from '../../core/models/incident.model';
 import { ReplacePipe } from '../../core/pipes/replace.pipe';
+import {
+  TranslationResponse,
+  TranslationService,
+} from '../../core/services/translation.service';
 
 declare var bootstrap: any;
 
@@ -39,6 +43,9 @@ interface ModalState {
   imageUrls: string[];
   currentImageIndex: number;
   error: string | null;
+  translation: TranslationResponse | null;
+  isTranslated: boolean;
+  isTranslating: boolean;
 }
 
 @Component({
@@ -95,7 +102,7 @@ export class MainMapComponent implements OnInit, OnDestroy {
       icon: this.getTypeIcon(key),
     }));
 
-  // Poboljšano state management za modal
+  // Prošireno state management za modal sa prevodom
   private modalStateSubject = new BehaviorSubject<ModalState>({
     isOpen: false,
     isLoading: false,
@@ -103,6 +110,9 @@ export class MainMapComponent implements OnInit, OnDestroy {
     imageUrls: [],
     currentImageIndex: 0,
     error: null,
+    translation: null,
+    isTranslated: false,
+    isTranslating: false,
   });
 
   public modalState$ = this.modalStateSubject.asObservable();
@@ -119,7 +129,8 @@ export class MainMapComponent implements OnInit, OnDestroy {
   constructor(
     private incidentService: IncidentService,
     private fb: FormBuilder,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private translationService: TranslationService
   ) {
     this.filterForm = this.fb.group({
       incidentType: [''],
@@ -150,7 +161,7 @@ export class MainMapComponent implements OnInit, OnDestroy {
   private setupFormSubscription(): void {
     this.filterForm.valueChanges
       .pipe(
-        debounceTime(200), // Smanjeno sa 500ms
+        debounceTime(200),
         takeUntil(this.destroy$)
       )
       .subscribe(() => {
@@ -169,13 +180,10 @@ export class MainMapComponent implements OnInit, OnDestroy {
   onMapReady(map: L.Map): void {
     this.map = map;
     this.isMapLoading = false;
-
-    // Dodaj custom kontrole
     this.addMapControls();
   }
 
   private addMapControls(): void {
-    // Custom zoom control sa boljim stilom
     const zoomControl = L.control.zoom({ position: 'topright' });
     this.map.addControl(zoomControl);
   }
@@ -199,21 +207,31 @@ export class MainMapComponent implements OnInit, OnDestroy {
     this.isFilterCollapsed = !this.isFilterCollapsed;
   }
 
-  // Poboljšana metoda za otvaranje modala
+  toggleTranslation(): void {
+    this.updateModalState({
+      isTranslated: !this.currentModalState.isTranslated,
+    });
+  }
+
+  // Proširena metoda za otvaranje modala sa prevodom
   openIncidentModal(incident: Incident): void {
-    // Resetuj modal state
+    // 1. Resetujemo stanje modala, uključujući nova svojstva za prevođenje
     this.updateModalState({
       isOpen: true,
-      isLoading: true,
+      isLoading: true, // Glavni loading za slike
       incident: incident,
       imageUrls: [],
       currentImageIndex: 0,
       error: null,
+      // Resetovanje prevoda
+      translation: null,
+      isTranslated: false,
+      isTranslating: true, // Odmah postavljamo da se prevod učitava
     });
 
     this.incidentModal?.show();
 
-    // Preload slike asinhrono
+    // 2. Učitavamo slike (ova logika ostaje ista)
     if (incident.images && incident.images.length > 0) {
       const imageFilenames = incident.images.map((img) => img.imageUrl);
 
@@ -232,14 +250,12 @@ export class MainMapComponent implements OnInit, OnDestroy {
             this.updateModalState({
               ...this.currentModalState,
               imageUrls: urls,
-              isLoading: false,
             });
           },
           error: (error) => {
             console.error('Failed to load images:', error);
             this.updateModalState({
               ...this.currentModalState,
-              isLoading: false,
               error: 'Failed to load images',
             });
           },
@@ -250,6 +266,17 @@ export class MainMapComponent implements OnInit, OnDestroy {
         isLoading: false,
       });
     }
+
+    // 3. --- DODAJEMO NOVU LOGIKU --- Pozivamo servis za prevođenje
+    this.translationService
+      .getTranslation(incident.description)
+      .pipe(finalize(() => this.updateModalState({ isTranslating: false }))) // Uvijek isključi loading
+      .subscribe((translationResponse) => {
+        // Ako je odgovor uspješan, sačuvaj ga u stanje
+        if (translationResponse) {
+          this.updateModalState({ translation: translationResponse });
+        }
+      });
   }
 
   private updateModalState(newState: Partial<ModalState>): void {
@@ -317,13 +344,12 @@ export class MainMapComponent implements OnInit, OnDestroy {
           const icon = createColoredIcon(color);
           const marker = L.marker(point, { icon });
 
-          const maxLength = 50; // ili koliko već želiš
+          const maxLength = 50;
           const shortDescription =
             incident.description.length > maxLength
               ? incident.description.substring(0, maxLength) + '...'
               : incident.description;
 
-          // Dodaj hover efekat
           marker.on('mouseover', () => {
             marker
               .bindTooltip(
@@ -347,7 +373,6 @@ export class MainMapComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Failed to load incidents:', error);
-        // Dodaj toast notifikaciju za greške
       },
     });
   }
@@ -357,7 +382,6 @@ export class MainMapComponent implements OnInit, OnDestroy {
     if (modalElement) {
       this.incidentModal = new bootstrap.Modal(modalElement);
 
-      // Cleanup modal state kada se zatvori
       modalElement.addEventListener('hidden.bs.modal', () => {
         this.updateModalState({
           isOpen: false,
@@ -366,6 +390,9 @@ export class MainMapComponent implements OnInit, OnDestroy {
           imageUrls: [],
           currentImageIndex: 0,
           error: null,
+          translation: null,
+          isTranslated: false,
+          isTranslating: false,
         });
       });
     }
@@ -386,57 +413,48 @@ export class MainMapComponent implements OnInit, OnDestroy {
     return icons[type] || 'exclamation-triangle';
   }
 
-
   getFormattedAddress(location: any): string | null {
-    const parts: string[] = []
+    const parts: string[] = [];
 
-    if (location.address) parts.push(location.address)
-    if (location.city) parts.push(location.city)
-    if (location.state) parts.push(location.state)
-    if (location.zipcode) parts.push(location.zipcode)
-    if (location.country) parts.push(location.country)
+    if (location.address) parts.push(location.address);
+    if (location.city) parts.push(location.city);
+    if (location.state) parts.push(location.state);
+    if (location.zipcode) parts.push(location.zipcode);
+    if (location.country) parts.push(location.country);
 
-    return parts.length > 0 ? parts.join(", ") : null
+    return parts.length > 0 ? parts.join(', ') : null;
   }
 
-  // Kopira koordinate u clipboard
   async copyCoordinates(location: any): Promise<void> {
-    const coordinates = `${location.latitude}, ${location.longitude}`
+    const coordinates = `${location.latitude}, ${location.longitude}`;
 
     try {
-      await navigator.clipboard.writeText(coordinates)
-      // Ovde možeš dodati toast notifikaciju
-      console.log("Coordinates copied to clipboard")
+      await navigator.clipboard.writeText(coordinates);
+      console.log('Coordinates copied to clipboard');
     } catch (err) {
-      console.error("Failed to copy coordinates:", err)
-      // Fallback za starije browsere
-      const textArea = document.createElement("textarea")
-      textArea.value = coordinates
-      document.body.appendChild(textArea)
-      textArea.select()
-      document.execCommand("copy")
-      document.body.removeChild(textArea)
+      console.error('Failed to copy coordinates:', err);
+      const textArea = document.createElement('textarea');
+      textArea.value = coordinates;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
     }
   }
 
-  // Otvara lokaciju u spoljašnjoj mapi (Google Maps)
   openInMaps(location: any): void {
-    const url = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`
-    window.open(url, "_blank")
+    const url = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
+    window.open(url, '_blank');
   }
 
-  // Centrira trenutnu mapu na lokaciju incidenta
   centerMapOnLocation(location: any): void {
     if (this.map) {
-      const latLng = L.latLng(location.latitude, location.longitude)
-      this.map.setView(latLng, 15) // Zoom level 15 za detaljniji prikaz
-
-      // Zatvori modal
-      this.incidentModal?.hide()
+      const latLng = L.latLng(location.latitude, location.longitude);
+      this.map.setView(latLng, 15);
+      this.incidentModal?.hide();
     }
   }
 
-  // Getter za template
   get isLoading(): boolean {
     return this.incidentService.loading$ as any;
   }

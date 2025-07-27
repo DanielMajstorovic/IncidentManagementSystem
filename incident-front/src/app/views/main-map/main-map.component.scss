@@ -862,3 +862,27 @@
     font-size: 0.9rem;
   }
 }
+
+
+
+.translation-controls {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 31px; /* Da spriječi skakanje layouta dok se učitava */
+
+  .lang-info {
+    font-size: 0.8rem;
+    color: #6c757d;
+  }
+
+  .translate-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+  }
+}

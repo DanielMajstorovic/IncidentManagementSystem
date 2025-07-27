@@ -186,7 +186,7 @@
   </div>
 </div>
 
-<!-- INCIDENT DETAIL MODAL (same as main-map) -->
+<!-- INCIDENT DETAIL MODAL WITH TRANSLATION SUPPORT -->
 <div
   class="modal fade"
   id="incidentDetailModal"
@@ -358,16 +358,79 @@
                 <i class="bi bi-info-square"></i> Incident Details
               </h6>
               <div class="info-cards">
-                <!-- Description Card -->
+                <!-- Description Card WITH TRANSLATION SUPPORT -->
                 <div class="info-card">
                   <div class="info-card-header">
                     <i class="bi bi-card-text text-primary"></i>
-                    <span>Description</span>
+                    <span>Incident Description</span>
                   </div>
                   <div class="info-card-body">
+                    <!-- Dynamic display of original or translation -->
                     <p class="description-text">
-                      {{ currentModalState.incident.description }}
+                      {{
+                        currentModalState.isTranslated
+                          ? currentModalState.translation?.translatedText
+                          : currentModalState.incident.description
+                      }}
                     </p>
+
+                    <!-- Translation controls block -->
+                    <div
+                      *ngIf="
+                        currentModalState.translation ||
+                        currentModalState.isTranslating
+                      "
+                      class="translation-controls"
+                    >
+                      <!-- Show detected language -->
+                      <span
+                        class="lang-info"
+                        *ngIf="currentModalState.translation"
+                      >
+                        Detected:
+                        <strong>{{
+                          currentModalState.translation.detectedLanguage
+                            | uppercase
+                        }}</strong>
+                      </span>
+
+                      <!-- Translation toggle button -->
+                      <button
+                        class="btn btn-sm btn-outline-primary translate-btn"
+                        (click)="toggleTranslation()"
+                        [disabled]="
+                          currentModalState.isTranslating ||
+                          !currentModalState.translation
+                        "
+                      >
+                        <!-- Show spinner while translation is loading -->
+                        <span
+                          *ngIf="currentModalState.isTranslating"
+                          class="spinner-border spinner-border-sm"
+                          role="status"
+                        ></span>
+
+                        <!-- Show button text based on state -->
+                        <span
+                          *ngIf="
+                            !currentModalState.isTranslating &&
+                            currentModalState.translation
+                          "
+                        >
+                          <i class="bi bi-translate"></i>
+                          <ng-container *ngIf="!currentModalState.isTranslated">
+                            Translate to
+                            {{
+                              currentModalState.translation.targetLanguage
+                                | uppercase
+                            }}
+                          </ng-container>
+                          <ng-container *ngIf="currentModalState.isTranslated">
+                            Show Original
+                          </ng-container>
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 

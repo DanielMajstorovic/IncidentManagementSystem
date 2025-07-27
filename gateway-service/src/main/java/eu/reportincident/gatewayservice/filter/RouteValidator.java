@@ -17,7 +17,8 @@ public class RouteValidator {
             "/auth-service/oauth2/authorization/google",
             "/auth-service/login/oauth2/code/google",
             "/incident-service/api/v1/incidents/image-url/**",
-            "/incident-service/api/v1/incidents/filter" // Pretpostavka da je filter za anonimne
+            "/incident-service/api/v1/incidents/filter", // Pretpostavka da je filter za anonimne
+            "/incident-service/api/v1/incidents/translate"
     );
 
     // Predikat koji vraća true ako je putanja zaštićena

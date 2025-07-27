@@ -1,1 +1,615 @@
-<p>admin-incidents works!</p>
+<div class="page-container">
+  <!-- ENHANCED FILTER SIDEBAR FOR ADMIN -->
+  <div class="filter-panel" [class.collapsed]="isFilterCollapsed">
+    <div class="filter-header">
+      <div class="filter-title">
+        <h4><i class="bi bi-bar-chart"></i> Admin Dashboard</h4>
+        <span class="filter-badge" *ngIf="activeFiltersCount > 0">{{
+          activeFiltersCount
+        }}</span>
+      </div>
+      <div class="filter-actions">
+        <button
+          class="btn btn-sm btn-outline-secondary me-2"
+          (click)="resetFilters()"
+          [disabled]="activeFiltersCount === 0"
+        >
+          <i class="bi bi-arrow-clockwise"></i> Reset
+        </button>
+        <button
+          class="btn btn-sm btn-outline-primary d-lg-none"
+          (click)="toggleFilterPanel()"
+        >
+          <i
+            class="bi"
+            [class.bi-chevron-left]="!isFilterCollapsed"
+            [class.bi-chevron-right]="isFilterCollapsed"
+          ></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ADMIN STATS -->
+    <div class="admin-stats">
+      <div class="stat-item total">
+        <div class="stat-value">{{ totalIncidents }}</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-item reported">
+        <div class="stat-value">{{ reportedCount }}</div>
+        <div class="stat-label">Reported</div>
+      </div>
+      <div class="stat-item approved">
+        <div class="stat-value">{{ approvedCount }}</div>
+        <div class="stat-label">Approved</div>
+      </div>
+      <div class="stat-item rejected">
+        <div class="stat-value">{{ rejectedCount }}</div>
+        <div class="stat-label">Rejected</div>
+      </div>
+    </div>
+
+    <div class="filter-content" [class.d-none]="isFilterCollapsed">
+      <form [formGroup]="filterForm" class="filter-form">
+        <!-- Status Filter -->
+        <div class="form-group">
+          <label for="status" class="form-label">
+            <i class="bi bi-flag-fill text-info"></i> Incident Status
+          </label>
+          <select
+            id="status"
+            class="form-select"
+            formControlName="status"
+          >
+            <option value="">All Statuses</option>
+            <option value="REPORTED">Reported</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+        </div>
+
+        <!-- Location Search -->
+        <div class="form-group">
+          <label for="location" class="form-label">
+            <i class="bi bi-geo-alt-fill text-primary"></i> Location Search
+          </label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input
+              type="text"
+              id="location"
+              class="form-control"
+              formControlName="location"
+              placeholder="e.g., Banja Luka"
+            />
+          </div>
+        </div>
+
+        <!-- Incident Type -->
+        <div class="form-group">
+          <label for="type" class="form-label">
+            <i class="bi bi-tags-fill text-warning"></i> Incident Type
+          </label>
+          <select
+            id="type"
+            class="form-select"
+            formControlName="incidentType"
+            (change)="onTypeChange()"
+          >
+            <option value="">All Types</option>
+            <option *ngFor="let type of incidentTypes" [value]="type">
+              {{ type | titlecase | replace : "_" : " " }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Incident Subtype -->
+        <div class="form-group">
+          <label for="subtype" class="form-label">
+            <i class="bi bi-tag-fill text-success"></i> Incident Subtype
+          </label>
+          <select
+            id="subtype"
+            class="form-select"
+            formControlName="incidentSubtype"
+            [disabled]="!filterForm.get('incidentType')?.value"
+          >
+            <option value="">All Subtypes</option>
+            <option *ngFor="let subtype of currentSubtypes" [value]="subtype">
+              {{ subtype | titlecase | replace : "_" : " " }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Time Range -->
+        <div class="form-group">
+          <label class="form-label">
+            <i class="bi bi-clock-fill text-success"></i> Time Range
+          </label>
+          <div class="time-range-grid">
+            <input
+              type="radio"
+              class="btn-check"
+              formControlName="timeRange"
+              id="timeAll"
+              value=""
+              autocomplete="off"
+            />
+            <label class="btn btn-outline-primary time-btn" for="timeAll">
+              <i class="bi bi-infinity"></i> All Time
+            </label>
+
+            <ng-container *ngFor="let range of timeRanges">
+              <input
+                type="radio"
+                class="btn-check"
+                formControlName="timeRange"
+                [id]="'time' + range.value"
+                [value]="range.value"
+                autocomplete="off"
+              />
+              <label
+                class="btn btn-outline-primary time-btn"
+                [for]="'time' + range.value"
+              >
+                <i class="bi" [class]="'bi-' + range.icon"></i>
+                {{ range.label }}
+              </label>
+            </ng-container>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAP CONTAINER -->
+  <div class="map-container">
+    <!-- Map Loading Overlay -->
+    <div class="map-loading-overlay" *ngIf="isMapLoading">
+      <div class="loading-content">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3 text-muted">Loading admin dashboard...</p>
+      </div>
+    </div>
+
+    <!-- Map Frame -->
+    <div
+      class="map-frame"
+      leaflet
+      [leafletOptions]="mapOptions"
+      [leafletLayers]="incidentLayers"
+      (leafletMapReady)="onMapReady($event)"
+    ></div>
+
+    <!-- Enhanced Legend for Admin -->
+    <div class="map-legend">
+      <div class="legend-header">
+        <h6><i class="bi bi-list-ul"></i> Legend</h6>
+      </div>
+      <div class="legend-items">
+        <div *ngFor="let item of legendData" class="legend-item">
+          <img
+            [src]="
+              'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-' +
+              item.color +
+              '.png'
+            "
+            class="legend-icon"
+            [alt]="item.type"
+          />
+          <span class="legend-text">
+            {{ item.type | titlecase }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Filter Toggle -->
+    <button
+      class="mobile-filter-toggle d-lg-none"
+      (click)="toggleFilterPanel()"
+    >
+      <i class="bi bi-bar-chart"></i>
+      <span class="filter-count" *ngIf="activeFiltersCount > 0">{{
+        activeFiltersCount
+      }}</span>
+    </button>
+  </div>
+</div>
+
+<!-- ENHANCED ADMIN MODAL -->
+<div
+  class="modal fade"
+  id="adminIncidentModal"
+  tabindex="-1"
+  aria-labelledby="adminIncidentModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div
+      class="modal-content admin-modal"
+      *ngIf="currentModalState.incident"
+    >
+      <!-- Modal Header with Status -->
+      <div class="modal-header">
+        <div class="modal-title-container">
+          <h5 class="modal-title" id="adminIncidentModalLabel">
+            <i class="bi bi-eye me-2"></i>
+            <span class="incident-type">{{
+              currentModalState.incident.type | titlecase | replace : "_" : " "
+            }}</span>
+            <span class="incident-subtype">{{
+              currentModalState.incident.subtype
+                | titlecase
+                | replace : "_" : " "
+            }}</span>
+          </h5>
+          <div class="incident-meta">
+            <span
+              class="badge"
+              [class]="getStatusBadgeClass(currentModalState.incident.status)"
+            >
+              {{ currentModalState.incident.status }}
+            </span>
+            <small>ID: #{{ currentModalState.incident.id }}</small>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div class="row g-4">
+          <!-- Images Section -->
+          <div class="col-lg-7">
+            <div class="images-section">
+              <h6 class="section-title">
+                <i class="bi bi-images"></i> Evidence Photos
+                <span
+                  class="image-count"
+                  *ngIf="currentModalState.imageUrls.length > 0"
+                >
+                  ({{ currentModalState.imageUrls.length }})
+                </span>
+              </h6>
+
+              <!-- Loading State -->
+              <div *ngIf="currentModalState.isLoading" class="image-loading">
+                <div class="skeleton-loader">
+                  <div class="skeleton-image"></div>
+                  <div class="skeleton-thumbnails">
+                    <div
+                      class="skeleton-thumb"
+                      *ngFor="let i of [1, 2, 3]"
+                    ></div>
+                  </div>
+                </div>
+                <div class="loading-text">
+                  <div
+                    class="spinner-border spinner-border-sm text-primary"
+                    role="status"
+                  ></div>
+                  <span class="ms-2">Loading evidence...</span>
+                </div>
+              </div>
+
+              <!-- Error State -->
+              <div
+                *ngIf="currentModalState.error && !currentModalState.isLoading"
+                class="image-error"
+              >
+                <div class="alert alert-warning">
+                  <i class="bi bi-exclamation-triangle"></i>
+                  {{ currentModalState.error }}
+                </div>
+              </div>
+
+              <!-- Images Content -->
+              <div
+                *ngIf="!currentModalState.isLoading && !currentModalState.error"
+              >
+                <div
+                  *ngIf="currentModalState.imageUrls.length > 0; else noPhotos"
+                  class="image-gallery"
+                >
+                  <!-- Main Image -->
+                  <div class="main-image-container">
+                    <img
+                      [src]="
+                        currentModalState.imageUrls[
+                          currentModalState.currentImageIndex
+                        ]
+                      "
+                      class="main-image"
+                      alt="Evidence Photo"
+                      (error)="onImageError($event)"
+                    />
+
+                    <!-- Navigation Arrows -->
+                    <button
+                      class="image-nav prev"
+                      (click)="previousImage()"
+                      *ngIf="currentModalState.imageUrls.length > 1"
+                    >
+                      <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button
+                      class="image-nav next"
+                      (click)="nextImage()"
+                      *ngIf="currentModalState.imageUrls.length > 1"
+                    >
+                      <i class="bi bi-chevron-right"></i>
+                    </button>
+
+                    <!-- Image Counter -->
+                    <div
+                      class="image-counter"
+                      *ngIf="currentModalState.imageUrls.length > 1"
+                    >
+                      {{ currentModalState.currentImageIndex + 1 }} /
+                      {{ currentModalState.imageUrls.length }}
+                    </div>
+                  </div>
+
+                  <!-- Thumbnails -->
+                  <div
+                    class="thumbnails"
+                    *ngIf="currentModalState.imageUrls.length > 1"
+                  >
+                    <button
+                      *ngFor="
+                        let url of currentModalState.imageUrls;
+                        let i = index
+                      "
+                      class="thumbnail"
+                      [class.active]="i === currentModalState.currentImageIndex"
+                      (click)="goToImage(i)"
+                    >
+                      <img
+                        [src]="url"
+                        [alt]="'Thumbnail ' + (i + 1)"
+                        (error)="onImageError($event)"
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                <!-- No Photos State -->
+                <ng-template #noPhotos>
+                  <div class="no-photos">
+                    <div class="no-photos-icon">
+                      <i class="bi bi-image-alt"></i>
+                    </div>
+                    <p class="no-photos-text">
+                      No evidence photos were provided for this incident.
+                    </p>
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Information Section -->
+          <div class="col-lg-5">
+            <div class="info-section">
+              <h6 class="section-title">
+                <i class="bi bi-clipboard-data"></i> Incident Details
+              </h6>
+
+              <div class="info-cards">
+                <!-- Description Card with Translation -->
+                <div class="info-card">
+                  <div class="info-card-header">
+                    <i class="bi bi-card-text text-primary"></i>
+                    <span>Incident Description</span>
+                  </div>
+                  <div class="info-card-body">
+                    <p class="description-text">
+                      {{
+                        currentModalState.isTranslated
+                          ? currentModalState.translation?.translatedText
+                          : currentModalState.incident.description
+                      }}
+                    </p>
+
+                    <div
+                      *ngIf="
+                        currentModalState.translation ||
+                        currentModalState.isTranslating
+                      "
+                      class="translation-controls"
+                    >
+                      <span
+                        class="lang-info"
+                        *ngIf="currentModalState.translation"
+                      >
+                        Detected:
+                        <strong>{{
+                          currentModalState.translation.detectedLanguage
+                            | uppercase
+                        }}</strong>
+                      </span>
+
+                      <button
+                        class="btn btn-sm btn-outline-primary translate-btn"
+                        (click)="toggleTranslation()"
+                        [disabled]="
+                          currentModalState.isTranslating ||
+                          !currentModalState.translation
+                        "
+                      >
+                        <span
+                          *ngIf="currentModalState.isTranslating"
+                          class="spinner-border spinner-border-sm"
+                          role="status"
+                        ></span>
+
+                        <span
+                          *ngIf="
+                            !currentModalState.isTranslating &&
+                            currentModalState.translation
+                          "
+                        >
+                          <i class="bi bi-translate"></i>
+                          <ng-container *ngIf="!currentModalState.isTranslated">
+                            Translate to
+                            {{
+                              currentModalState.translation.targetLanguage
+                                | uppercase
+                            }}
+                          </ng-container>
+                          <ng-container *ngIf="currentModalState.isTranslated">
+                            Show Original
+                          </ng-container>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Location Card -->
+                <div class="info-card location-card">
+                  <div class="info-card-header">
+                    <i class="bi bi-geo-alt-fill text-danger"></i>
+                    <span>Location Information</span>
+                  </div>
+                  <div class="info-card-body">
+                    <!-- Full Address Display -->
+                    <div
+                      class="location-address"
+                      *ngIf="
+                        getFormattedAddress(
+                          currentModalState.incident.location
+                        );
+                        let address
+                      "
+                    >
+                      <div class="address-main">
+                        <i class="bi bi-geo"></i>
+                        <span class="address-text">{{ address }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Coordinates Section -->
+                    <div class="coordinates-section">
+                      <div class="coordinates-header">
+                        <i class="bi bi-crosshair"></i>
+                        <span>Coordinates</span>
+                      </div>
+                      <div class="coordinates-grid">
+                        <div class="coordinate-item">
+                          <span class="coord-label">Latitude</span>
+                          <span class="coord-value"
+                            >{{
+                              currentModalState.incident.location.latitude
+                                | number : "1.6-6"
+                            }}°</span
+                          >
+                        </div>
+                        <div class="coordinate-item">
+                          <span class="coord-label">Longitude</span>
+                          <span class="coord-value"
+                            >{{
+                              currentModalState.incident.location.longitude
+                                | number : "1.6-6"
+                            }}°</span
+                          >
+                        </div>
+                      </div>
+
+                      <!-- Copy Coordinates Button -->
+                      <button
+                        class="btn btn-sm btn-outline-primary copy-coords-btn"
+                        (click)="
+                          copyCoordinates(currentModalState.incident.location)
+                        "
+                      >
+                        <i class="bi bi-clipboard"></i>
+                        Copy Coordinates
+                      </button>
+                    </div>
+
+                    <!-- Location Actions -->
+                    <div class="location-actions">
+                      <button
+                        class="btn btn-primary btn-sm"
+                        (click)="
+                          openInMaps(currentModalState.incident.location)
+                        "
+                      >
+                        <i class="bi bi-map"></i>
+                        View in Maps
+                      </button>
+                      <button
+                        class="btn btn-outline-secondary btn-sm"
+                        (click)="
+                          centerMapOnLocation(
+                            currentModalState.incident.location
+                          )
+                        "
+                      >
+                        <i class="bi bi-crosshair2"></i>
+                        Center on Map
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Status & Timeline Card -->
+                <div class="info-card">
+                  <div class="info-card-header">
+                    <i class="bi bi-clock-history text-success"></i>
+                    <span>Incident Timeline</span>
+                  </div>
+                  <div class="info-card-body">
+                    <div class="timeline-item">
+                      <span class="timeline-label">Reported:</span>
+                      <span class="timeline-value">{{
+                        currentModalState.incident.reportedAt | date : "medium"
+                      }}</span>
+                    </div>
+                    <div class="timeline-item">
+                      <span class="timeline-label">Current Status:</span>
+                      <span
+                        class="badge"
+                        [class]="
+                          getStatusBadgeClass(currentModalState.incident.status)
+                        "
+                      >
+                        {{ currentModalState.incident.status }}
+                      </span>
+                    </div>
+                    <div class="timeline-item">
+                      <span class="timeline-label">Incident ID:</span>
+                      <span class="timeline-value incident-id"
+                        >#{{ currentModalState.incident.id }}</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer - Admin View Only -->
+      <div class="modal-footer admin-footer">
+        <div class="admin-info">
+          <div class="info-text">
+            <i class="bi bi-info-circle text-muted"></i>
+            <span class="text-muted">
+              Administrative view - incident details are read-only
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

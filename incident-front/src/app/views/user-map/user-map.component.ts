@@ -25,6 +25,10 @@ import {
   IncidentRequest,
 } from '../../core/models/incident.model';
 import { ReplacePipe } from '../../core/pipes/replace.pipe';
+import {
+  TranslationResponse,
+  TranslationService,
+} from '../../core/services/translation.service';
 
 declare var bootstrap: any;
 
@@ -55,6 +59,9 @@ interface ModalState {
   imageUrls: string[];
   currentImageIndex: number;
   error: string | null;
+  translation: TranslationResponse | null;
+  isTranslated: boolean;
+  isTranslating: boolean;
 }
 
 interface SelectedImage {
@@ -148,7 +155,7 @@ export class UserMapComponent implements OnInit, OnDestroy {
       icon: this.getTypeIcon(key),
     }));
 
-  // Modal state management (inherited from main-map)
+  // Modal state management with translation support
   private modalStateSubject = new BehaviorSubject<ModalState>({
     isOpen: false,
     isLoading: false,
@@ -156,6 +163,9 @@ export class UserMapComponent implements OnInit, OnDestroy {
     imageUrls: [],
     currentImageIndex: 0,
     error: null,
+    translation: null,
+    isTranslated: false,
+    isTranslating: false,
   });
   public modalState$ = this.modalStateSubject.asObservable();
   public currentModalState: ModalState = this.modalStateSubject.value;
@@ -183,7 +193,8 @@ export class UserMapComponent implements OnInit, OnDestroy {
   constructor(
     private incidentService: IncidentService,
     private fb: FormBuilder,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private translationService: TranslationService
   ) {
     // Initialize filter form (inherited from main-map)
     this.filterForm = this.fb.group({
@@ -224,6 +235,13 @@ export class UserMapComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  // Translation toggle method
+  toggleTranslation(): void {
+    this.updateModalState({
+      isTranslated: !this.currentModalState.isTranslated,
+    });
   }
 
   // Inherited methods from main-map component
@@ -483,6 +501,9 @@ export class UserMapComponent implements OnInit, OnDestroy {
           imageUrls: [],
           currentImageIndex: 0,
           error: null,
+          translation: null,
+          isTranslated: false,
+          isTranslating: false,
         });
       });
     }
@@ -715,53 +736,50 @@ export class UserMapComponent implements OnInit, OnDestroy {
     this.currentReportSubtypes = [];
   }
 
-  // Inherited methods from main-map component
+  // Enhanced modal opening with translation support
   openIncidentModal(incident: Incident): void {
+    // 1. Reset modal state including translation properties
     this.updateModalState({
       isOpen: true,
-      isLoading: true,
+      isLoading: true, // Main loading for images
       incident: incident,
       imageUrls: [],
       currentImageIndex: 0,
       error: null,
+      // Reset translation
+      translation: null,
+      isTranslated: false,
+      isTranslating: true, // Immediately set translation loading
     });
+
     this.incidentModal?.show();
 
+    // 2. Load images (this logic remains the same)
     if (incident.images && incident.images.length > 0) {
       const imageFilenames = incident.images.map((img) => img.imageUrl);
       this.incidentService
         .preloadImages(imageFilenames)
-        .pipe(
-          finalize(() => {
-            this.updateModalState({
-              ...this.currentModalState,
-              isLoading: false,
-            });
-          })
-        )
+        .pipe(finalize(() => this.updateModalState({ isLoading: false })))
         .subscribe({
-          next: (urls) => {
-            this.updateModalState({
-              ...this.currentModalState,
-              imageUrls: urls,
-              isLoading: false,
-            });
-          },
+          next: (urls) => this.updateModalState({ imageUrls: urls }),
           error: (error) => {
-            console.error('Failed to load images:', error);
-            this.updateModalState({
-              ...this.currentModalState,
-              isLoading: false,
-              error: 'Failed to load images',
-            });
+            this.updateModalState({ error: 'Failed to load images' });
           },
         });
     } else {
-      this.updateModalState({
-        ...this.currentModalState,
-        isLoading: false,
-      });
+      this.updateModalState({ isLoading: false });
     }
+
+    // 3. --- NEW LOGIC --- Call translation service
+    this.translationService
+      .getTranslation(incident.description)
+      .pipe(finalize(() => this.updateModalState({ isTranslating: false }))) // Always turn off loading
+      .subscribe((translationResponse) => {
+        // If response is successful, save it to state
+        if (translationResponse) {
+          this.updateModalState({ translation: translationResponse });
+        }
+      });
   }
 
   private updateModalState(newState: Partial<ModalState>): void {

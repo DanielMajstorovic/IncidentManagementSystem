@@ -132,7 +132,7 @@
   </div>
 </div>
 
-<!-- ENHANCED BOOTSTRAP MODAL -->
+<!-- ENHANCED BOOTSTRAP MODAL SA PREVODOM -->
 <div class="modal fade" id="incidentDetailModal" tabindex="-1" 
      aria-labelledby="incidentDetailModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -249,14 +249,79 @@
 
               <div class="info-cards">
                 
-                <!-- Description Card -->
+                <!-- Description Card with Translation -->
                 <div class="info-card">
                   <div class="info-card-header">
                     <i class="bi bi-card-text text-primary"></i>
                     <span>Description</span>
                   </div>
                   <div class="info-card-body">
-                    <p class="description-text">{{ currentModalState.incident.description }}</p>
+                    <!-- 1. Ovaj paragraf sada dinamički prikazuje ili original ili prevod -->
+                    <p class="description-text">
+                      {{
+                        currentModalState.isTranslated
+                          ? currentModalState.translation?.translatedText
+                          : currentModalState.incident.description
+                      }}
+                    </p>
+
+                    <!-- 2. Ovaj blok prikazuje kontrole za prevođenje -->
+                    <div
+                      *ngIf="
+                        currentModalState.translation ||
+                        currentModalState.isTranslating
+                      "
+                      class="translation-controls"
+                    >
+                      <!-- Prikazuje detektovani jezik -->
+                      <span
+                        class="lang-info"
+                        *ngIf="currentModalState.translation"
+                      >
+                        Detected:
+                        <strong>{{
+                          currentModalState.translation.detectedLanguage
+                            | uppercase
+                        }}</strong>
+                      </span>
+
+                      <!-- Dugme koje pokreće prevođenje -->
+                      <button
+                        class="btn btn-sm btn-outline-primary translate-btn"
+                        (click)="toggleTranslation()"
+                        [disabled]="
+                          currentModalState.isTranslating ||
+                          !currentModalState.translation
+                        "
+                      >
+                        <!-- Prikazuje spinner dok se prevod učitava -->
+                        <span
+                          *ngIf="currentModalState.isTranslating"
+                          class="spinner-border spinner-border-sm"
+                          role="status"
+                        ></span>
+
+                        <!-- Prikazuje tekst na dugmetu u zavisnosti od stanja -->
+                        <span
+                          *ngIf="
+                            !currentModalState.isTranslating &&
+                            currentModalState.translation
+                          "
+                        >
+                          <i class="bi bi-translate"></i>
+                          <ng-container *ngIf="!currentModalState.isTranslated">
+                            Translate to
+                            {{
+                              currentModalState.translation.targetLanguage
+                                | uppercase
+                            }}
+                          </ng-container>
+                          <ng-container *ngIf="currentModalState.isTranslated">
+                            Show Original
+                          </ng-container>
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -275,7 +340,6 @@
                         <span class="address-text">{{ address }}</span>
                       </div>
                     </div>
-
 
                     <!-- Coordinates Section -->
                     <div class="coordinates-section">
