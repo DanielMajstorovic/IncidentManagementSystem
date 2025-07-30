@@ -75,6 +75,7 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
       error: err => {
         this.error = 'Failed to load initial data. Please try again.';
         console.error(err);
+        this.autoHideMessage();
       }
     });
   }
@@ -88,7 +89,7 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
     return roles.map(role => ({
       ...role,
       userCount: userCounts[role.name] || 0,
-      endpointIds: (role as any).endpointIds || [] // Osiguravamo da postoji
+      endpointIds: (role as any).endpointIds || []
     }));
   }
 
@@ -109,7 +110,11 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
     this.newRoleName = '';
     this.showCreateModal = true;
   }
-  closeCreateModal(): void { this.showCreateModal = false; }
+  
+  closeCreateModal(): void { 
+    this.showCreateModal = false; 
+  }
+  
   createRole(): void {
     if (!this.newRoleName.trim()) return;
     this.roleService.createRole(this.newRoleName.trim()).subscribe({
@@ -136,7 +141,11 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
     }, {} as { [key: number]: boolean });
     this.showPermissionsModal = true;
   }
-  closePermissionsModal(): void { this.showPermissionsModal = false; }
+  
+  closePermissionsModal(): void { 
+    this.showPermissionsModal = false; 
+  }
+  
   updatePermissions(): void {
     if (!this.roleToEdit) return;
     const selectedEndpointIds = Object.keys(this.permissionSelection)
@@ -159,8 +168,13 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
   }
 
   // Endpoints Modal
-  openEndpointsModal(): void { this.showEndpointsModal = true; }
-  closeEndpointsModal(): void { this.showEndpointsModal = false; }
+  openEndpointsModal(): void { 
+    this.showEndpointsModal = true; 
+  }
+  
+  closeEndpointsModal(): void { 
+    this.showEndpointsModal = false; 
+  }
 
   // Delete Role Modal
   openDeleteModal(role: RoleDetailDto): void {
@@ -168,7 +182,11 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
     this.roleToDelete = role;
     this.showDeleteModal = true;
   }
-  closeDeleteModal(): void { this.showDeleteModal = false; }
+  
+  closeDeleteModal(): void { 
+    this.showDeleteModal = false; 
+  }
+  
   deleteRole(): void {
     if (!this.roleToDelete) return;
     this.roleService.deleteRole(this.roleToDelete.id).subscribe({
@@ -188,18 +206,35 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
 
   getRoleClass(role: string): string {
     if (!role) {
-      return 'role-default'; // Vraća podrazumevanu klasu ako rola nije definisana
+      return 'role-default';
     }
-
-    // Pretvara ime role u lowercase (npr. "ADMIN" -> "admin")
-    // i zamenjuje eventualne razmake sa crticom (za role kao "PROJECT MANAGER")
     const formattedRole = role.toLowerCase().replace(/\s+/g, "-");
+    return `role-${formattedRole}`;
+  }
 
-    return `role-${formattedRole}`; // Spaja prefiks "role-" sa formatiranim imenom
+  getSelectedCount(): number {
+    return Object.values(this.permissionSelection).filter(selected => selected).length;
+  }
+
+  getMethodClass(method: string): string {
+    return `method-${method.toLowerCase()}`;
+  }
+
+  getEndpointsByMethod(method: string): EndpointDto[] {
+    return this.allEndpoints.filter(endpoint => endpoint.httpMethod === method);
   }
   
   // Utility methods
-  getInitial(name?: string): string { return name?.charAt(0).toUpperCase() || "?"; }
-  clearMessages(): void { this.error = ""; this.successMessage = ""; }
-  private autoHideMessage(): void { setTimeout(() => this.clearMessages(), 5000); }
+  getInitial(name?: string): string { 
+    return name?.charAt(0).toUpperCase() || "?"; 
+  }
+  
+  clearMessages(): void { 
+    this.error = ""; 
+    this.successMessage = ""; 
+  }
+  
+  private autoHideMessage(): void { 
+    setTimeout(() => this.clearMessages(), 5000); 
+  }
 }
