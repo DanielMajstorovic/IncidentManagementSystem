@@ -1,6 +1,8 @@
 package eu.reportincident.userservice.service.impl;
 
+import eu.reportincident.userservice.exception.ResourceNotFoundException;
 import eu.reportincident.userservice.exception.UserBlockedException;
+import eu.reportincident.userservice.model.dto.UserDto;
 import eu.reportincident.userservice.model.dto.UserLoginRequest;
 import eu.reportincident.userservice.model.dto.UserLoginResponse;
 import eu.reportincident.userservice.model.entity.Role;
@@ -11,6 +13,9 @@ import eu.reportincident.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -49,4 +54,55 @@ public class UserServiceImpl implements UserService {
                 .build();
         return userRepository.save(newUser);
     }
+
+
+    @Override
+    public List<UserDto> findAllUsers() {
+        return userRepository.findAll().stream()
+                .map(UserDto::new) // Koristimo DTO konstruktor
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public UserDto updateUserRole(Long userId, String roleName) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        Role newRole = roleRepository.findByName(roleName)
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with name: " + roleName));
+
+        user.setRole(newRole);
+        return new UserDto(userRepository.save(user));
+    }
+
+    @Override
+    @Transactional
+    public UserDto blockUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        user.setBlocked(true);
+        return new UserDto(userRepository.save(user));
+    }
+
+    @Override
+    @Transactional
+    public UserDto unblockUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        user.setBlocked(false);
+        return new UserDto(userRepository.save(user));
+    }
+
+    @Override
+    @Transactional
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        user.setDeleted(true);
+        userRepository.save(user);
+    }
+
+
+
+
 }

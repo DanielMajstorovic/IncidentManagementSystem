@@ -1,1 +1,269 @@
-<p>user-management works!</p>
+<div class="user-management-container">
+  <div class="header">
+    <h1>User Management</h1>
+    <button class="btn btn-secondary" (click)="refreshUsers()" [disabled]="loading">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+        <path d="M21 3v5h-5"/>
+        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+        <path d="M3 21v-5h5"/>
+      </svg>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="filters-section">
+    <div class="search-bar">
+      <div class="search-input-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input
+          type="text"
+          placeholder="Search by name or email..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()"
+          class="search-input"
+        />
+      </div>
+    </div>
+    
+    <div class="filters">
+      <select [(ngModel)]="selectedRoleFilter" (change)="onRoleFilterChange()" class="filter-select">
+        <option value="">All Roles</option>
+        <option *ngFor="let role of roles" [value]="role.name">{{ role.name }}</option>
+      </select>
+      
+      <select [(ngModel)]="selectedStatusFilter" (change)="onStatusFilterChange()" class="filter-select">
+        <option value="">All Statuses</option>
+        <option value="active">Active</option>
+        <option value="blocked">Blocked</option>
+        <option value="deleted">Deleted</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Bulk Actions -->
+  <div class="bulk-actions" *ngIf="canPerformBulkActions()">
+    <span class="selected-count">{{ getSelectedUsersCount() }} users selected</span>
+    <div class="bulk-buttons">
+      <button class="btn btn-warning" (click)="bulkBlockUsers()" [disabled]="loading">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M4.93 4.93l14.14 14.14"/>
+        </svg>
+        Block Selected
+      </button>
+      <button class="btn btn-success" (click)="bulkUnblockUsers()" [disabled]="loading">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 12l2 2 4-4"/>
+          <circle cx="12" cy="12" r="10"/>
+        </svg>
+        Activate Selected
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div class="message success-message" *ngIf="successMessage">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M9 12l2 2 4-4"/>
+      <circle cx="12" cy="12" r="10"/>
+    </svg>
+    {{ successMessage }}
+    <button class="close-btn" (click)="successMessage = ''">×</button>
+  </div>
+  
+  <div class="message error-message" *ngIf="error">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="15" y1="9" x2="9" y2="15"/>
+      <line x1="9" y1="9" x2="15" y2="15"/>
+    </svg>
+    {{ error }}
+    <button class="close-btn" (click)="error = ''">×</button>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div class="loading-indicator" *ngIf="loading">
+    <div class="spinner"></div>
+    <span>Loading...</span>
+  </div>
+
+  <!-- Users Table -->
+  <div class="table-container" *ngIf="!loading">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th class="checkbox-col">
+            <input
+              type="checkbox"
+              [checked]="selectAll"
+              (change)="toggleSelectAll()"
+              [disabled]="filteredUsers.length === 0"
+            />
+          </th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th class="actions-col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of filteredUsers" [class]="getUserStatusClass(user)">
+          <td class="checkbox-col">
+            <input
+              type="checkbox"
+              [checked]="isUserSelected(user.id)"
+              (change)="toggleUserSelection(user.id)"
+            />
+          </td>
+          <td class="user-name">
+            <div class="user-info">
+              <div class="avatar">{{ getInitial(user.name) }}</div>
+              <span>{{ user.name }}</span>
+            </div>
+          </td>
+          <td class="user-email">{{ user.email }}</td>
+          <td>
+            <span class="role-badge" [class]="getRoleClass(user.role)">
+              {{ user.role }}
+            </span>
+          </td>
+          <td>
+            <span class="status-badge" [class]="getUserStatusClass(user)">
+              {{ getUserStatusText(user) }}
+            </span>
+          </td>
+          <td class="actions">
+            <button
+              class="btn btn-small btn-primary"
+              (click)="openRoleModal(user)"
+              [disabled]="user.deleted"
+              title="Change Role"
+            >
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="8.5" cy="7" r="4"/>
+                <line x1="20" y1="8" x2="20" y2="14"/>
+                <line x1="23" y1="11" x2="17" y2="11"/>
+              </svg>
+              Role
+            </button>
+            
+            <button
+              *ngIf="!user.deleted"
+              class="btn btn-small"
+              [class]="user.blocked ? 'btn-success' : 'btn-warning'"
+              (click)="toggleUserBlock(user)"
+              [title]="user.blocked ? 'Activate User' : 'Block User'"
+            >
+              <svg *ngIf="user.blocked" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 12l2 2 4-4"/>
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
+              <svg *ngIf="!user.blocked" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M4.93 4.93l14.14 14.14"/>
+              </svg>
+              {{ user.blocked ? 'Activate' : 'Block' }}
+            </button>
+            
+            <button
+              class="btn btn-small btn-danger"
+              (click)="openDeleteModal(user)"
+              [disabled]="user.deleted"
+              title="Delete User"
+            >
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3,6 5,6 21,6"/>
+                <path d="M19,6v14a2,2 0,0,1-2,2H7a2,2 0,0,1-2-2V6m3,0V4a2,2 0,0,1,2-2h4a2,2 0,0,1,2,2v2"/>
+                <line x1="10" y1="11" x2="10" y2="17"/>
+                <line x1="14" y1="11" x2="14" y2="17"/>
+              </svg>
+              Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="empty-state" *ngIf="filteredUsers.length === 0">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="M21 21l-4.35-4.35"/>
+      </svg>
+      <h3>No users found</h3>
+      <p>No users match your search criteria.</p>
+    </div>
+  </div>
+
+  <!-- Role Update Modal -->
+  <div class="modal-overlay" *ngIf="showRoleModal" (click)="closeRoleModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Change User Role</h3>
+        <button class="close-btn" (click)="closeRoleModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="user-details">
+          <div class="avatar large">{{ getInitial(userToUpdateRole?.name) }}</div>
+          <div>
+            <p><strong>User:</strong> {{ userToUpdateRole?.name }}</p>
+            <p><strong>Current Role:</strong> {{ userToUpdateRole?.role }}</p>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="newRole">New Role:</label>
+          <select id="newRole" [(ngModel)]="newRoleForUser" class="form-control">
+            <option *ngFor="let role of roles" [value]="role.name">{{ role.name }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeRoleModal()">Cancel</button>
+        <button
+          class="btn btn-primary"
+          (click)="updateUserRole()"
+          [disabled]="!newRoleForUser || newRoleForUser === userToUpdateRole?.role"
+        >
+          Update
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+    <div class="modal modal-danger" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <svg class="icon danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="15" y1="9" x2="9" y2="15"/>
+          <line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+        <h3>Confirm Deletion</h3>
+        <button class="close-btn" (click)="closeDeleteModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this user?</p>
+        <div class="user-details">
+          <div class="avatar">{{ getInitial(userToDelete?.name) }}</div>
+          <div>
+            <p><strong>{{ userToDelete?.name }}</strong></p>
+            <p>{{ userToDelete?.email }}</p>
+          </div>
+        </div>
+        <p class="warning-text">This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDeleteModal()">Cancel</button>
+        <button class="btn btn-danger" (click)="deleteUser()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
