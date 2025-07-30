@@ -17,6 +17,29 @@ export interface RoleDto {
   name: string
 }
 
+// NOVI, OBOGAĆENI DTO za prikaz u tabeli
+export interface RoleDetailDto extends RoleDto {
+  endpointIds: number[];
+  userCount: number; // Broj korisnika sa ovom rolom
+}
+
+// NOVI DTO za endpointe
+export interface EndpointDto {
+  id: number;
+  httpMethod: string;
+  pathPattern: string;
+}
+
+// NOVI DTO za kreiranje role
+export interface CreateRoleRequest {
+  name: string;
+}
+
+// NOVI DTO za ažuriranje dozvola
+export interface UpdateRolePermissionsRequest {
+  endpointIds: number[];
+}
+
 export interface UpdateUserRoleRequest {
   roleName: string
 }

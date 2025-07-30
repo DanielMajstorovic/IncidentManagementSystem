@@ -59,6 +59,12 @@ export class AppComponent implements OnInit, OnDestroy {
       icon: "people",
       roles: ["ADMIN"],
     },
+    {
+      label: "Role Management",
+      route: "/admin/role-management",
+      icon: "shield-lock",
+      roles: ["ADMIN"],
+    },
   ]
 
   constructor(

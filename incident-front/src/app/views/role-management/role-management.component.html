@@ -1,0 +1,185 @@
+<div class="user-management-container">
+
+  <!-- Filters and Main Actions -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="search-bar">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" placeholder="Search by role name..." [(ngModel)]="searchTerm" (input)="applyFilters()" class="search-input"/>
+        </div>
+      </div>
+      <div class="filters">
+        <button class="btn btn-secondary" (click)="refreshData()" [disabled]="loading">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+          Refresh
+        </button>
+        <button class="btn btn-secondary" (click)="openEndpointsModal()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          View Endpoints
+        </button>
+        <button class="btn btn-primary" (click)="openCreateModal()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Add New Role
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div class="message success-message" *ngIf="successMessage">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+    {{ successMessage }}
+    <button class="close-btn" (click)="successMessage = ''">×</button>
+  </div>
+  <div class="message error-message" *ngIf="error">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    {{ error }}
+    <button class="close-btn" (click)="error = ''">×</button>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div class="loading-indicator" *ngIf="loading">
+    <div class="spinner"></div>
+    <span>Loading Roles...</span>
+  </div>
+
+  <!-- Roles Table -->
+  <div class="table-container" *ngIf="!loading">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>Role Name</th>
+          <th>Users with this Role</th>
+          <th>Permissions Assigned</th>
+          <th class="actions-col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let role of filteredRoles">
+          <td class="user-name">
+            <div class="user-info">
+              <div class="avatar" [class]="getRoleClass(role.name)">{{ getInitial(role.name) }}</div>
+              <span>{{ role.name }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="badge bg-secondary">{{ role.userCount }} User(s)</span>
+          </td>
+          <td>
+            <span class="badge bg-primary">{{ role.endpointIds.length }} Endpoint(s)</span>
+          </td>
+          <td class="actions">
+            <button class="btn btn-small btn-primary" (click)="openPermissionsModal(role)" title="Manage Permissions">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20.94c1.5 0 2.75 1.06 3 2.5h-6c.25-1.44 1.5-2.5 3-2.5z"/><path d="M12 11.91c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm0 4c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/><path d="M18 8.91h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2.91H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10.9c0-1.1-.9-2-2-2zm-6-4c1.65 0 3 1.35 3 3v2.91H9V6c0-1.65 1.35-3 3-3zm6 15H6V10.9h12V19.9z"/></svg>
+              Permissions
+            </button>
+            <button class="btn btn-small btn-danger" (click)="openDeleteModal(role)" [disabled]="role.userCount > 0" title="{{ role.userCount > 0 ? 'Cannot delete role with assigned users' : 'Delete Role' }}">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2 0,0,1-2,2H7a2,2 0,0,1-2-2V6m3,0V4a2,2 0,0,1,2-2h4a2,2 0,0,1,2,2v2"/></svg>
+              Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="filteredRoles.length === 0">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <h3>No Roles Found</h3>
+      <p>No roles match your search criteria. Try creating a new one!</p>
+    </div>
+  </div>
+
+  <!-- Create Role Modal -->
+  <div class="app-modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+    <div class="app-modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <h3>Create New Role</h3>
+        </div>
+        <button class="close-btn" (click)="closeCreateModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="newRoleName">Role Name:</label>
+          <input type="text" id="newRoleName" [(ngModel)]="newRoleName" class="form-control" placeholder="e.g., SUPER_ADMIN">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeCreateModal()">Cancel</button>
+        <button class="btn btn-primary" (click)="createRole()" [disabled]="!newRoleName.trim()">Create Role</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Permissions Modal -->
+  <div class="app-modal-overlay" *ngIf="showPermissionsModal" (click)="closePermissionsModal()">
+    <div class="app-modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20.94c1.5 0 2.75 1.06 3 2.5h-6c.25-1.44 1.5-2.5 3-2.5z"/><path d="M12 11.91c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm0 4c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/><path d="M18 8.91h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2.91H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10.9c0-1.1-.9-2-2-2zm-6-4c1.65 0 3 1.35 3 3v2.91H9V6c0-1.65 1.35-3 3-3zm6 15H6V10.9h12V19.9z"/></svg>
+          <h3>Manage Permissions for {{ roleToEdit?.name }}</h3>
+        </div>
+        <button class="close-btn" (click)="closePermissionsModal()">×</button>
+      </div>
+      <div class="modal-body permission-list">
+        <p class="text-muted">Select the endpoints that this role should have access to.</p>
+        <div *ngFor="let endpoint of allEndpoints" class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" role="switch" [id]="'endpoint-' + endpoint.id" [(ngModel)]="permissionSelection[endpoint.id]">
+          <label class="form-check-label" [for]="'endpoint-' + endpoint.id">
+            <span class="badge me-2" [ngClass]="{'bg-success': endpoint.httpMethod === 'GET', 'bg-primary': endpoint.httpMethod === 'POST', 'bg-warning text-dark': endpoint.httpMethod === 'PUT', 'bg-danger': endpoint.httpMethod === 'DELETE'}">{{ endpoint.httpMethod }}</span>
+            <code>{{ endpoint.pathPattern }}</code>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" (click)="closePermissionsModal()">Cancel</button><button class="btn btn-primary" (click)="updatePermissions()">Save Permissions</button></div>
+    </div>
+  </div>
+
+  <!-- View All Endpoints Modal -->
+  <div class="app-modal-overlay" *ngIf="showEndpointsModal" (click)="closeEndpointsModal()">
+    <div class="app-modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          <h3>Available System Endpoints</h3>
+        </div>
+        <button class="close-btn" (click)="closeEndpointsModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-group">
+          <li *ngFor="let endpoint of allEndpoints" class="list-group-item d-flex align-items-center">
+            <span class="badge me-3" [ngClass]="{'bg-success': endpoint.httpMethod === 'GET', 'bg-primary': endpoint.httpMethod === 'POST', 'bg-warning text-dark': endpoint.httpMethod === 'PUT', 'bg-danger': endpoint.httpMethod === 'DELETE'}">{{ endpoint.httpMethod }}</span>
+            <code>{{ endpoint.pathPattern }}</code>
+          </li>
+        </ul>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" (click)="closeEndpointsModal()">Close</button></div>
+    </div>
+  </div>
+  
+  <!-- Delete Role Modal -->
+  <div class="app-modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+    <div class="app-modal-content modal-danger" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg class="icon danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          <h3>Confirm Deletion</h3>
+        </div>
+        <button class="close-btn" (click)="closeDeleteModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="warning-message">Are you sure you want to delete the role '<strong>{{ roleToDelete?.name }}</strong>'?</p>
+        <div class="warning-text">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          This action is permanent and cannot be undone.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDeleteModal()">Cancel</button>
+        <button class="btn btn-danger" (click)="deleteRole()">Delete Role</button>
+      </div>
+    </div>
+  </div>
+
+</div>

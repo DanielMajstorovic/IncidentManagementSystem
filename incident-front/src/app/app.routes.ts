@@ -9,6 +9,7 @@ import { AdminIncidentsComponent } from "./views/admin-incidents/admin-incidents
 import { UserManagementComponent } from "./views/user-management/user-management.component"
 import { UnauthorizedComponent } from "./views/unauthorized/unauthorized.component"
 import { AuthErrorComponent } from "./views/auth-error/auth-error.component"
+import { RoleManagementComponent } from "./views/role-management/role-management.component"
 
 export const routes: Routes = [
   {
@@ -62,6 +63,13 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
     data: { roles: ["ADMIN"] },
     title: "User Management",
+  },
+  {
+    path: "admin/role-management",
+    component: RoleManagementComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ["ADMIN"] },
+    title: "Role Management",
   },
   {
     path: "unauthorized",
