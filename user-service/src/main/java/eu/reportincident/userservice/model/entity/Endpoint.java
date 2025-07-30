@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Data
 @NoArgsConstructor
-@Table(name = "endpoints")
+@Table(name = "endpoints", uniqueConstraints = @UniqueConstraint(columnNames = {"pathPattern", "httpMethod"}))
 public class Endpoint {
 
     @Id
@@ -17,6 +17,6 @@ public class Endpoint {
     @Column(nullable = false)
     private String httpMethod; // "GET", "POST", etc.
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String pathPattern; // e.g., "/incident-service/api/v1/incidents/status/PENDING"
 }

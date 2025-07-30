@@ -12,5 +12,5 @@ public interface EndpointRepository extends JpaRepository<Endpoint, Long> {
     @Query("SELECT DISTINCT e FROM Role r JOIN r.endpoints e")
     List<Endpoint> findAllWithRoles();
 
-    Optional<Endpoint> findByPathPattern(String pathPattern);
+    Optional<Endpoint> findByPathPatternAndHttpMethod(String pathPattern, String httpMethod);
 }

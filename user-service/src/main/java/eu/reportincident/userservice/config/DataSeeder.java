@@ -102,7 +102,7 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private Endpoint createEndpointIfNotFound(String httpMethod, String pathPattern) {
-        return endpointRepository.findByPathPattern(pathPattern).orElseGet(() -> {
+        return endpointRepository.findByPathPatternAndHttpMethod(pathPattern, httpMethod).orElseGet(() -> {
             log.info("Creating endpoint: {} {}", httpMethod, pathPattern);
             Endpoint newEndpoint = new Endpoint();
             newEndpoint.setHttpMethod(httpMethod);
