@@ -31,4 +31,17 @@ public class RabbitMQProducer {
         }
 
     }
+
+
+    public void sendIncidentStatusUpdatedEvent(IncidentStatusUpdateEvent event) {
+        log.info("[RabbitMQ] Sending IncidentStatusUpdateEvent for Incident ID: {}", event.getIncidentId());
+        try{
+            rabbitTemplate.convertAndSend(exchange.getName(), rabbitMQProperties.getRoutingKeyStatusUpdated(), event);
+            log.info("[RabbitMQ] IncidentStatusUpdateEvent for Incident ID: {} sent successfully", event.getIncidentId());
+        }catch (AmqpException e){
+            log.error("[RabbitMQ] Failed to send IncidentStatusUpdateEvent for Incident ID: {}. Error: {}", event.getIncidentId(), e.getMessage());
+        }
+    }
+
+
 }

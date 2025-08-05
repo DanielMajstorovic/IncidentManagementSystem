@@ -1,6 +1,7 @@
 package eu.reportincident.incident_service.service.impl;
 
 import eu.reportincident.incident_service.event.IncidentCreatedEvent;
+import eu.reportincident.incident_service.event.IncidentStatusUpdateEvent;
 import eu.reportincident.incident_service.event.RabbitMQProducer;
 import eu.reportincident.incident_service.exception.NotFoundException;
 import eu.reportincident.incident_service.model.dto.Incident;
@@ -151,6 +152,10 @@ public class IncidentServiceImpl implements IncidentService {
             IncidentEntity updatedIncident = incidentEntity.get();
             updatedIncident.setStatus(status.getStatus());
             updatedIncident = incidentRepository.saveAndFlush(updatedIncident);
+
+            IncidentStatusUpdateEvent incidentStatusUpdateEvent = new IncidentStatusUpdateEvent(updatedIncident.getId(), status.getStatus(), LocalDateTime.now());
+            rabbitMQProducer.sendIncidentStatusUpdatedEvent(incidentStatusUpdateEvent);
+
             return modelMapper.map(updatedIncident, Incident.class);
         } else {
             throw new NotFoundException("Incident not found with id: " + id);
