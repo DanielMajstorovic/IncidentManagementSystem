@@ -1,1 +1,208 @@
-<p>alert-params works!</p>
+<div class="alert-params-container">
+  <!-- Status Messages -->
+  <div class="alert alert-success" *ngIf="successMessage" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    {{ successMessage }}
+    <button type="button" class="btn-close" (click)="successMessage = ''" aria-label="Close"></button>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="error" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ error }}
+    <button type="button" class="btn-close" (click)="error = ''" aria-label="Close"></button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="loading-text">Loading alert settings...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading" class="content-wrapper">
+
+    <!-- Main Grid -->
+    <div class="main-grid">
+      <!-- Settings Card -->
+      <div class="card settings-card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="bi bi-gear-fill me-2"></i>
+            Detection Settings
+          </h3>
+          <p class="card-subtitle">Configure parameters for incident cluster detection</p>
+        </div>
+        
+        <div class="card-body">
+          <form [formGroup]="settingsForm" (ngSubmit)="onSubmit()" novalidate>
+            <div class="form-grid">
+              <!-- Time Window -->
+              <div class="form-group">
+                <label for="timeWindowDays" class="form-label">
+                  <i class="bi bi-calendar3 me-2"></i>
+                  Time Window
+                </label>
+                <div class="input-group">
+                  <input 
+                    type="number" 
+                    id="timeWindowDays" 
+                    class="form-control"
+                    [class.is-invalid]="isFieldInvalid('timeWindowDays')"
+                    formControlName="timeWindowDays"
+                    min="1" 
+                    max="30"
+                    placeholder="7">
+                  <span class="input-group-text">days</span>
+                </div>
+                <div class="form-text">
+                  Historical period to analyze for incident patterns (1-30 days)
+                </div>
+                <div *ngIf="isFieldInvalid('timeWindowDays')" class="invalid-feedback">
+                  {{ getFieldError('timeWindowDays') }}
+                </div>
+              </div>
+
+              <!-- Incident Threshold -->
+              <div class="form-group">
+                <label for="minIncidentsThreshold" class="form-label">
+                  <i class="bi bi-bar-chart-fill me-2"></i>
+                  Incident Threshold
+                </label>
+                <div class="input-group">
+                  <input 
+                    type="number" 
+                    id="minIncidentsThreshold" 
+                    class="form-control"
+                    [class.is-invalid]="isFieldInvalid('minIncidentsThreshold')"
+                    formControlName="minIncidentsThreshold"
+                    min="1" 
+                    max="50"
+                    placeholder="5">
+                  <span class="input-group-text">incidents</span>
+                </div>
+                <div class="form-text">
+                  Minimum incidents required in a cluster to trigger an alert (1-50)
+                </div>
+                <div *ngIf="isFieldInvalid('minIncidentsThreshold')" class="invalid-feedback">
+                  {{ getFieldError('minIncidentsThreshold') }}
+                </div>
+              </div>
+
+              <!-- Max Radius -->
+              <div class="form-group">
+                <label for="maxRadiusMeters" class="form-label">
+                  <i class="bi bi-geo-alt-fill me-2"></i>
+                  Detection Radius
+                </label>
+                <div class="input-group">
+                  <input 
+                    type="number" 
+                    id="maxRadiusMeters" 
+                    class="form-control"
+                    [class.is-invalid]="isFieldInvalid('maxRadiusMeters')"
+                    formControlName="maxRadiusMeters"
+                    min="50" 
+                    max="5000"
+                    placeholder="500">
+                  <span class="input-group-text">meters</span>
+                </div>
+                <div class="form-text">
+                  Maximum distance for grouping related incidents (50-5000m)
+                </div>
+                <div *ngIf="isFieldInvalid('maxRadiusMeters')" class="invalid-feedback">
+                  {{ getFieldError('maxRadiusMeters') }}
+                </div>
+              </div>
+
+              <!-- Cooldown Period -->
+              <div class="form-group">
+                <label for="cooldownPeriodMinutes" class="form-label">
+                  <i class="bi bi-clock-fill me-2"></i>
+                  Cooldown Period
+                </label>
+                <div class="input-group">
+                  <input 
+                    type="number" 
+                    id="cooldownPeriodMinutes" 
+                    class="form-control"
+                    [class.is-invalid]="isFieldInvalid('cooldownPeriodMinutes')"
+                    formControlName="cooldownPeriodMinutes"
+                    min="1" 
+                    max="1440"
+                    placeholder="60">
+                  <span class="input-group-text">minutes</span>
+                </div>
+                <div class="form-text">
+                  Minimum time between alerts for the same location (1-1440 min)
+                </div>
+                <div *ngIf="isFieldInvalid('cooldownPeriodMinutes')" class="invalid-feedback">
+                  {{ getFieldError('cooldownPeriodMinutes') }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+              <button 
+                type="submit" 
+                class="btn btn-primary"
+                [disabled]="saving || settingsForm.invalid || !settingsForm.dirty">
+                <span *ngIf="saving" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <i *ngIf="!saving" class="bi bi-check-lg me-2"></i>
+                {{ saving ? 'Saving Changes...' : 'Save Settings' }}
+              </button>
+              
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary"
+                [disabled]="saving || !settingsForm.dirty"
+                (click)="settingsForm.reset(); loadInitialData()">
+                <i class="bi bi-arrow-clockwise me-2"></i>
+                Reset
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Status Card -->
+      <div class="card status-card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="bi bi-activity me-2"></i>
+            System Status
+          </h3>
+          <p class="card-subtitle">Current alert system information</p>
+        </div>
+        
+        <div class="card-body">
+          <div class="status-item">
+            <div class="status-icon">
+              <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="status-content">
+              <div class="status-label">Last Alert Sent</div>
+              <div class="status-value">{{ timeSinceLastAlert }}</div>
+              <div *ngIf="lastAlertInfo?.lastAlertTimestamp" class="status-timestamp">
+                {{ lastAlertInfo?.lastAlertTimestamp | date:'MMM d, y \'at\' h:mm a' }}
+              </div>
+            </div>
+          </div>
+
+          <div class="status-item">
+            <div class="status-icon success">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="status-content">
+              <div class="status-label">System Status</div>
+              <div class="status-value success">Active & Monitoring</div>
+              <div class="status-timestamp">All detection parameters configured</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

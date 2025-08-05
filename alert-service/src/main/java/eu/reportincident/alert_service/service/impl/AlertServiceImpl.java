@@ -2,13 +2,14 @@ package eu.reportincident.alert_service.service.impl;
 
 import eu.reportincident.alert_service.client.IncidentServiceClient;
 import eu.reportincident.alert_service.client.UserServiceClient;
-import eu.reportincident.alert_service.config.AlertProperties;
 import eu.reportincident.alert_service.model.dto.client.IncidentDetailsDto;
 import eu.reportincident.alert_service.model.entity.AlertIncident;
 import eu.reportincident.alert_service.model.entity.AlertLog;
+import eu.reportincident.alert_service.model.entity.AlertSettings;
 import eu.reportincident.alert_service.repository.AlertIncidentRepository;
 import eu.reportincident.alert_service.repository.AlertLogRepository;
 import eu.reportincident.alert_service.service.AlertService;
+import eu.reportincident.alert_service.service.AlertSettingsService;
 import eu.reportincident.alert_service.service.NotificationService;
 import eu.reportincident.alert_service.service.util.DistanceCalculator;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class AlertServiceImpl implements AlertService {
     private final AlertLogRepository alertLogRepository;
     private final NotificationService notificationService;
     private final DistanceCalculator distanceCalculator;
-    private final AlertProperties alertProperties;
+    private final AlertSettingsService settingsService;
 
     @Override
     public void processNewIncident(Long incidentId) {
@@ -53,34 +54,36 @@ public class AlertServiceImpl implements AlertService {
     }
 
     private void checkForAlerts(AlertIncident newIncident) {
-        LocalDateTime timeWindow = LocalDateTime.now().minusDays(alertProperties.getTimeWindowDays());
+        // ===== KLJUČNA IZMENA: Učitavamo podešavanja iz baze =====
+        AlertSettings currentSettings = settingsService.getSettings();
+
+        LocalDateTime timeWindow = LocalDateTime.now().minusDays(currentSettings.getTimeWindowDays());
         List<AlertIncident> recentIncidents = incidentRepository.findByReportedAtAfter(timeWindow);
 
         List<AlertIncident> cluster = recentIncidents.stream()
                 .filter(other -> distanceCalculator.calculateDistance(
                         newIncident.getLatitude(), newIncident.getLongitude(),
                         other.getLatitude(), other.getLongitude()
-                ) <= alertProperties.getMaxRadiusMeters())
+                ) <= currentSettings.getMaxRadiusMeters())
                 .toList();
 
-        if (cluster.size() >= alertProperties.getMinIncidentsThreshold()) {
+        if (cluster.size() >= currentSettings.getMinIncidentsThreshold()) {
             log.info("Potential alert triggered. Cluster size: {} incidents.", cluster.size());
-            handlePotentialAlert(cluster);
+            handlePotentialAlert(cluster, currentSettings);
         }
     }
 
-    private void handlePotentialAlert(List<AlertIncident> cluster) {
-        // Calculate cluster centroid
+
+    private void handlePotentialAlert(List<AlertIncident> cluster, AlertSettings currentSettings) {
         double centroidLat = cluster.stream().mapToDouble(AlertIncident::getLatitude).average().orElse(0.0);
         double centroidLon = cluster.stream().mapToDouble(AlertIncident::getLongitude).average().orElse(0.0);
 
-        // Check for cooldown
-        LocalDateTime cooldownTime = LocalDateTime.now().minusMinutes(alertProperties.getCooldownPeriodMinutes());
+        LocalDateTime cooldownTime = LocalDateTime.now().minusMinutes(currentSettings.getCooldownPeriodMinutes());
         List<AlertLog> recentAlerts = alertLogRepository.findByAlertTimestampAfter(cooldownTime);
 
         boolean isCooledDown = recentAlerts.stream().noneMatch(log ->
                 distanceCalculator.calculateDistance(centroidLat, centroidLon, log.getLatitude(), log.getLongitude())
-                        <= alertProperties.getMaxRadiusMeters()
+                        <= currentSettings.getMaxRadiusMeters()
         );
 
         if (isCooledDown) {
