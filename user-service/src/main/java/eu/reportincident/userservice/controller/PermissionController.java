@@ -11,14 +11,14 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/internal/permissions") // Interna putanja, nije za javni API
+@RequestMapping("/internal/permissions")
 @RequiredArgsConstructor
 public class PermissionController {
 
     private final PermissionService permissionService;
 
     @GetMapping
-    public ResponseEntity<Map<String, List<String>>> getAllPermissions() {
+    public ResponseEntity<Map<String, Map<String, List<String>>>> getAllPermissions() {
         return ResponseEntity.ok(permissionService.getPermissionMap());
     }
 }

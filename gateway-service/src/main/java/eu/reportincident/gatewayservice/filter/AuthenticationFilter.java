@@ -52,10 +52,11 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                     DecodedJWT decodedJWT = jwtUtil.validateToken(token);
                     String role = jwtUtil.getClaim(decodedJWT, "role");
                     String path = exchange.getRequest().getPath().toString();
+                    String method = exchange.getRequest().getMethod().name();
 
-                    List<String> rolesForPath = permissionCacheService.getRequiredRolesForPath(path);
+                    List<String> requiredRoles = permissionCacheService.getRequiredRoles(path, method);
 
-                    if (rolesForPath == null || !rolesForPath.contains(role)) {
+                    if (requiredRoles == null || !requiredRoles.contains(role)) {
                         log.warn("Authorization failed. User with role '{}' attempted to access protected route '{}'", role, path);
                         exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
                         return exchange.getResponse().setComplete();

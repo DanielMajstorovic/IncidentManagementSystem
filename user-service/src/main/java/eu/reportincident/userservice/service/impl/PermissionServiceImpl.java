@@ -1,5 +1,6 @@
 package eu.reportincident.userservice.service.impl;
 
+import eu.reportincident.userservice.model.entity.Endpoint;
 import eu.reportincident.userservice.model.entity.Role;
 import eu.reportincident.userservice.model.repository.RoleRepository;
 import eu.reportincident.userservice.service.PermissionService;
@@ -17,19 +18,27 @@ public class PermissionServiceImpl implements PermissionService {
 
     private final RoleRepository roleRepository;
 
-    @Transactional(readOnly = true) // Optimizacija za operacije koje samo čitaju podatke
-    public Map<String, List<String>> getPermissionMap() {
-        // Dohvatamo sve role sa njihovim povezanim endpointima odjednom
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Map<String, List<String>>> getPermissionMap() {
         List<Role> rolesWithEndpoints = roleRepository.findAll();
 
-        // Transformišemo listu u mapu formata <Putanja, Lista_Rola>
-        // Primer: <"/incidents/pending", ["MODERATOR", "ADMIN"]>
+        // Kreiramo Map<Putanja, Map<Metoda, ListaRola>>
         return rolesWithEndpoints.stream()
+                // Prolazimo kroz svaku rolu
                 .flatMap(role -> role.getEndpoints().stream()
-                        .map(endpoint -> Map.entry(endpoint.getPathPattern(), role.getName())))
+                        // Za svaki endpoint te role, pravimo "trojku": (putanja, metoda, ime role)
+                        .map(endpoint -> new PermissionTuple(endpoint.getPathPattern(), endpoint.getHttpMethod(), role.getName()))
+                )
                 .collect(Collectors.groupingBy(
-                        Map.Entry::getKey,
-                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())
+                        PermissionTuple::path, // 1. Grupišemo po putanji
+                        Collectors.groupingBy(
+                                PermissionTuple::method, // 2. Unutar svake putanje, grupišemo po metodi
+                                Collectors.mapping(PermissionTuple::roleName, Collectors.toList()) // 3. Skupljamo imena rola u listu
+                        )
                 ));
     }
+
+    // Pomoćna "record" klasa za lakše stream-ovanje
+    private record PermissionTuple(String path, String method, String roleName) {}
 }

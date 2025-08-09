@@ -5,5 +5,5 @@ import java.util.Map;
 
 public interface PermissionService {
 
-    Map<String, List<String>> getPermissionMap();
+    Map<String, Map<String, List<String>>> getPermissionMap();
 }
