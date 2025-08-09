@@ -155,11 +155,12 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
     this.roleService.updateRolePermissions(this.roleToEdit.id, selectedEndpointIds).subscribe({
       next: () => {
         this.successMessage = `Permissions for role '${this.roleToEdit?.name}' updated.`;
-        this.loadInitialData();
         this.closePermissionsModal();
+        this.loadInitialData();
         this.autoHideMessage();
       },
       error: (err: any) => {
+        this.closePermissionsModal();
         this.error = 'Failed to update permissions.';
         console.error(err);
         this.autoHideMessage();
@@ -197,6 +198,7 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
         this.autoHideMessage();
       },
       error: (err: any) => {
+        this.closeDeleteModal();
         this.error = 'Failed to delete role. It might be in use.';
         console.error(err);
         this.autoHideMessage();

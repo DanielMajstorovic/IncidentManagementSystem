@@ -6,9 +6,10 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.AntPathMatcher; // Importujemo AntPathMatcher
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,8 +20,8 @@ public class PermissionCacheService implements ApplicationListener<ApplicationRe
 
     private final WebClient.Builder webClientBuilder;
     private Map<String, List<String>> permissionMap = new ConcurrentHashMap<>();
+    private final AntPathMatcher pathMatcher = new AntPathMatcher(); // Kreiramo instancu
 
-    // Injektujemo WebClient.Builder umesto Feign klijenta
     public PermissionCacheService(WebClient.Builder webClientBuilder) {
         this.webClientBuilder = webClientBuilder;
     }
@@ -35,25 +36,38 @@ public class PermissionCacheService implements ApplicationListener<ApplicationRe
     public void refreshCache() {
         log.info("Refreshing permission cache...");
 
-        // Koristimo WebClient za reaktivni, neblokirajući poziv
         webClientBuilder.build().get()
-                .uri("http://user-service/internal/permissions") // Koristimo ime servisa, Eureka će ga pronaći
+                .uri("http://user-service/internal/permissions")
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, List<String>>>() {})
                 .doOnSuccess(map -> {
-                    this.permissionMap = new ConcurrentHashMap<>(map); // Zamenjujemo keširanu mapu
+                    this.permissionMap = new ConcurrentHashMap<>(map);
                     log.info("Permission cache refreshed successfully. Loaded {} rules.", permissionMap.size());
                 })
                 .doOnError(error -> log.error("Failed to refresh permission cache", error))
-                .subscribe(); // subscribe() pokreće ceo proces
+                .subscribe();
     }
 
+    // ===== POTPUNO NOVA, ROBUSTNA LOGIKA =====
     public List<String> getRequiredRolesForPath(String path) {
-        // Logika ostaje ista
-        return permissionMap.entrySet().stream()
-                .filter(entry -> path.startsWith(entry.getKey()))
-                .map(Map.Entry::getValue)
-                .findFirst()
-                .orElse(null);
+        // 1. Pronađi SVE obrasce koji se poklapaju sa dolaznom putanjom
+        List<String> matchingPatterns = new java.util.ArrayList<>(permissionMap.keySet().stream()
+                .filter(pattern -> pathMatcher.match(pattern, path))
+                .toList());
+
+        if (matchingPatterns.isEmpty()) {
+            return null; // Nema pravila za ovu putanju, smatramo je otvorenom za autentifikovane korisnike
+        }
+
+        // 2. Sortiraj obrasce od najspecifičnijeg ka najmanje specifičnom
+        // Primer: "/users/{id}" je specifičniji od "/users/**"
+        matchingPatterns.sort(pathMatcher.getPatternComparator(path));
+
+        // 3. Uzmi NAJSPECIFIČNIJI obrazac (prvi u sortiranoj listi)
+        String bestMatch = matchingPatterns.get(0);
+        log.debug("Best pattern match for path '{}' is '{}'", path, bestMatch);
+
+        // 4. Vrati role koje su definisane za taj, najspecifičniji obrazac
+        return permissionMap.get(bestMatch);
     }
 }

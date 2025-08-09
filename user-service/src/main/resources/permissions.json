@@ -1,0 +1,110 @@
+{
+  "endpoints": [
+    {
+      "method": "POST",
+      "path": "/incident-service/api/v1/incidents",
+      "roles": ["USER"]
+    },
+    {
+      "method": "GET",
+      "path": "/incident-service/api/v1/incidents",
+      "roles": ["USER", "MODERATOR", "ADMIN"]
+    },
+    {
+      "method": "POST",
+      "path": "/incident-service/api/v1/incidents/upload",
+      "roles": ["USER"]
+    },
+    {
+      "method": "GET",
+      "path": "/incident-service/api/v1/incidents/{id}",
+      "roles": ["USER", "MODERATOR", "ADMIN"]
+    },
+    {
+      "method": "PUT",
+      "path": "/incident-service/api/v1/incidents/{id}/status",
+      "roles": ["MODERATOR"]
+    },
+    {
+      "method": "GET",
+      "path": "/analytics-service/api/v1/analytics/by-type",
+      "roles": ["MODERATOR"]
+    },
+    {
+      "method": "GET",
+      "path": "/analytics-service/api/v1/analytics/by-day",
+      "roles": ["MODERATOR"]
+    },
+    {
+      "method": "GET",
+      "path": "/analytics-service/api/v1/analytics/by-city",
+      "roles": ["MODERATOR"]
+    },
+    {
+      "method": "GET",
+      "path": "/alert-service/api/v1/alerts/settings",
+      "roles": ["MODERATOR"]
+    },
+    {
+      "method": "PUT",
+      "path": "/alert-service/api/v1/alerts/settings",
+      "roles": ["MODERATOR"]
+    },
+    {
+      "method": "GET",
+      "path": "/alert-service/api/v1/alerts/last",
+      "roles": ["MODERATOR"]
+    },
+    {
+      "method": "GET",
+      "path": "/user-service/api/v1/users",
+      "roles": ["ADMIN"]
+    },
+    {
+      "method": "PUT",
+      "path": "/user-service/api/v1/users/{id}/role",
+      "roles": ["ADMIN"]
+    },
+    {
+      "method": "PUT",
+      "path": "/user-service/api/v1/users/{id}/block",
+      "roles": ["ADMIN"]
+    },
+    {
+      "method": "PUT",
+      "path": "/user-service/api/v1/users/{id}/unblock",
+      "roles": ["ADMIN"]
+    },
+    {
+      "method": "DELETE",
+      "path": "/user-service/api/v1/users/{id}",
+      "roles": ["ADMIN"]
+    },
+    {
+      "method": "GET",
+      "path": "/user-service/api/v1/roles",
+      "roles": ["ADMIN"]
+    },
+    {
+      "method": "POST",
+      "path": "/user-service/api/v1/roles",
+      "roles": ["ADMIN"]
+    },
+    {
+      "method": "PUT",
+      "path": "/user-service/api/v1/roles/{id}/permissions",
+      "roles": ["ADMIN"]
+    },
+    {
+      "method": "DELETE",
+      "path": "/user-service/api/v1/roles/{id}",
+      "roles": ["ADMIN"]
+    },
+    {
+      "method": "GET",
+      "path": "/user-service/api/v1/endpoints",
+      "roles": ["ADMIN"]
+    }
+  ]
+}
+

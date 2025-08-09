@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Component
@@ -54,7 +55,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 
                     List<String> rolesForPath = permissionCacheService.getRequiredRolesForPath(path);
 
-                    if (rolesForPath != null && !rolesForPath.contains(role)) {
+                    if (rolesForPath == null || !rolesForPath.contains(role)) {
                         log.warn("Authorization failed. User with role '{}' attempted to access protected route '{}'", role, path);
                         exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
                         return exchange.getResponse().setComplete();
